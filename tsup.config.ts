@@ -31,7 +31,7 @@ export default defineConfig({
   sourcemap: !isProduction || process.env.ENABLE_SOURCEMAP === 'true',
 
   // 压缩策略：始终启用压缩（发布库需要）
-  minify: isProduction,
+  minify: true,
 
   // 清理输出目录
   clean: true,
