@@ -1,13 +1,17 @@
 # @zhama/a2ui-core
 
-A2UI Protocol Core Library - Framework-agnostic TypeScript types and builders for A2UI protocol.
+A2UI Protocol Core Library - Framework-agnostic TypeScript types and builders for A2UI v0.9 protocol.
+
+> **Note**: This library uses A2UI v0.9 format exclusively. While v0.9 is still in draft status
+> according to [a2ui.org](https://a2ui.org/), it offers a cleaner and more modern API.
 
 ## Overview
 
 A2UI (Agent to UI) is a JSON-based streaming UI protocol for dynamically rendering user interfaces. This library provides:
 
-- **Types**: Complete TypeScript type definitions for A2UI v0.8 and v0.9
+- **Types**: Complete TypeScript type definitions for A2UI v0.9
 - **Builders**: Convenient functions to build messages and components
+- **Surface**: Surface ID constants and creation utilities
 - **Validators**: Message validation utilities
 - **Utils**: Utility functions for path bindings and data manipulation
 
@@ -24,9 +28,12 @@ pnpm add @zhama/a2ui-core
 ```typescript
 import {
   // Builders
-  text, column, button, card,
+  text, column, button, h1,
   createSurface, updateComponents, updateDataModel,
   createV09Messages,
+  
+  // Surface
+  SURFACE_IDS, createA2UISurface,
   
   // Validators
   validateMessage,
@@ -36,17 +43,17 @@ import {
   
   // Types
   type ComponentInstance,
-  type ServerToClientMessage,
+  type ServerToClientMessageV09,
 } from '@zhama/a2ui-core';
 
 // Create components
-const title = text('Hello World', { id: 'title', usageHint: 'h1' });
+const title = h1('Hello World', { id: 'title' });
 const greeting = text({ path: '/user/name' }, { id: 'greeting' });
 const root = column(['title', 'greeting'], { id: 'root' });
 
 // Create messages
 const messages = createV09Messages({
-  surfaceId: 'my-surface',
+  surfaceId: SURFACE_IDS.CHAT,
   components: [title, greeting, root],
   dataModel: { user: { name: 'John' } },
 });
@@ -62,7 +69,7 @@ You can import specific modules for tree-shaking:
 
 ```typescript
 // Types only
-import type { ComponentInstance, ServerToClientMessage } from '@zhama/a2ui-core/types';
+import type { ComponentInstance, ServerToClientMessageV09 } from '@zhama/a2ui-core/types';
 
 // Builders only
 import { text, column, createV09Messages } from '@zhama/a2ui-core/builders';
@@ -72,35 +79,15 @@ import { validateMessage, validateMessages } from '@zhama/a2ui-core/validators';
 
 // Utils only
 import { path, uuid, deepMerge } from '@zhama/a2ui-core/utils';
+
+// Surface utilities
+import { SURFACE_IDS, createA2UISurface, createChatSurface } from '@zhama/a2ui-core/surface';
 ```
 
 ## API Reference
 
-### Types
+### Component Builders
 
-#### Primitives
-- `StringOrPath` - String literal or data path binding
-- `NumberOrPath` - Number literal or data path binding
-- `BooleanOrPath` - Boolean literal or data path binding
-- `StringArrayOrPath` - String array literal or data path binding
-
-#### Components (18 standard components)
-**Content**: `TextComponent`, `ImageComponent`, `IconComponent`, `VideoComponent`, `AudioPlayerComponent`
-**Layout**: `RowComponent`, `ColumnComponent`, `ListComponent`, `CardComponent`, `TabsComponent`, `DividerComponent`, `ModalComponent`
-**Interactive**: `ButtonComponent`, `CheckBoxComponent`, `TextFieldComponent`, `DateTimeInputComponent`, `ChoicePickerComponent`, `SliderComponent`
-
-#### Messages
-- **v0.9**: `CreateSurfaceMessage`, `UpdateComponentsMessage`, `UpdateDataModelMessage`, `DeleteSurfaceMessage`
-- **v0.8**: `BeginRenderingMessage`, `SurfaceUpdateMessage`, `DataModelUpdateMessage`
-
-#### Other Types
-- `Theme` - UI theme configuration
-- `Action` - User action definition
-- `ComponentInstance` - Component instance with ID
-
-### Builders
-
-#### Component Builders
 ```typescript
 // Content components
 text(content: StringOrPath, options?: TextOptions): ComponentInstance
@@ -137,36 +124,53 @@ caption(content: StringOrPath, options?: TextOptions): ComponentInstance
 body(content: StringOrPath, options?: TextOptions): ComponentInstance
 ```
 
-#### Message Builders
+### Message Builders
+
 ```typescript
-// v0.9
 createSurface(surfaceId: string, catalogId?: string): CreateSurfaceMessage
 updateComponents(surfaceId: string, components: ComponentInstance[]): UpdateComponentsMessage
 updateDataModel(surfaceId: string, value: unknown, path?: string, op?: 'add' | 'replace' | 'remove'): UpdateDataModelMessage
 deleteSurface(surfaceId: string): DeleteSurfaceMessage
 createV09Messages(options): ServerToClientMessageV09[]
 
-// v0.8
-beginRendering(rootId: string, surfaceId?: string, styles?: Theme): BeginRenderingMessage
-surfaceUpdate(components: ComponentInstanceV08[], surfaceId?: string): SurfaceUpdateMessage
-dataModelUpdate(contents: ValueMap[], surfaceId?: string, path?: string): DataModelUpdateMessage
-dataModelInit(data: DataObject, surfaceId?: string): DataModelUpdateMessage
-pathUpdate(path: string, value: DataValue, surfaceId?: string): DataModelUpdateMessage
-createV08Messages(options): ServerToClientMessageV08[]
-
 // Utilities
-messagesToJsonl(messages: ServerToClientMessage[]): string
-jsonlToMessages(jsonl: string): ServerToClientMessage[]
+messagesToJsonl(messages: ServerToClientMessageV09[]): string
+jsonlToMessages(jsonl: string): ServerToClientMessageV09[]
 ```
 
-#### Data Model Builders
+### Surface Module
+
+```typescript
+// Surface ID constants
+SURFACE_IDS.CHAT           // '@chat' - Chat content area
+SURFACE_IDS.RECOMMENDATION // '@recommendation' - Agent recommendations
+SURFACE_IDS.INPUT_FORM     // '@input-form' - Input collection forms
+SURFACE_IDS.ORCHESTRATION  // '@orchestration' - Multi-agent orchestration
+SURFACE_IDS.STATUS         // '@status' - Status messages
+SURFACE_IDS.RESULT         // '@result' - Agent results
+SURFACE_IDS.CONFIRM        // '@confirm' - Confirmation dialogs
+SURFACE_IDS.NOTIFICATION   // '@notification' - Notifications
+
+// Surface creation functions
+createA2UISurface(rootId: string, components: ComponentInstance[], surfaceId?: string): SurfaceResult
+createA2UISurfaceWithData(rootId: string, components: ComponentInstance[], dataModel: DataObject, surfaceId?: string): SurfaceResult
+createDeleteSurfaceMessage(surfaceId: string): ServerToClientMessageV09
+
+// Convenience functions
+createChatSurface(rootId: string, components: ComponentInstance[]): SurfaceResult
+createRecommendationSurface(rootId: string, components: ComponentInstance[]): SurfaceResult
+createInputFormSurface(rootId: string, components: ComponentInstance[]): SurfaceResult
+createOrchestrationSurface(rootId: string, components: ComponentInstance[]): SurfaceResult
+createStatusSurface(rootId: string, components: ComponentInstance[]): SurfaceResult
+```
+
+### Data Model
+
 ```typescript
 objectToValueMap(obj: DataObject, prefix?: string): ValueMap[]
 valueToValueMap(key: string, value: DataValue): ValueMap
 valueMapToObject(valueMaps: ValueMap[]): DataObject
 normalizePath(path: string, pathMappings?: PathMappings): string
-updatesToValueMap(updates: UpdateDataItem[], basePath?: string): ValueMap[]
-flattenObjectToValueMap(obj: DataObject, basePath: string): ValueMap[]
 ```
 
 ### Validators
@@ -175,7 +179,6 @@ flattenObjectToValueMap(obj: DataObject, basePath: string): ValueMap[]
 validateMessage(message: ServerToClientMessage, options?: ValidationOptions): ValidationResult
 validateMessages(messages: ServerToClientMessage[], options?: ValidationOptions): ValidationResult
 validateV09Message(message: ServerToClientMessageV09, options?: ValidationOptions): ValidationResult
-validateV08Message(message: ServerToClientMessageV08, options?: ValidationOptions): ValidationResult
 ```
 
 ### Utils
@@ -183,10 +186,10 @@ validateV08Message(message: ServerToClientMessageV08, options?: ValidationOption
 ```typescript
 path(dataPath: string): { path: string }           // Create data binding
 isPathBinding(value): boolean                       // Check if value is a path binding
-getLiteralValue<T>(value): T | undefined           // Get literal value from StringOrPath/NumberOrPath/BooleanOrPath
+getLiteralValue<T>(value): T | undefined           // Get literal value
 getPathValue(value): string | undefined            // Get path from binding
 generateId(prefix?: string): string                // Generate unique component ID
-resetIdCounter(): void                             // Reset ID counter (for new scenes)
+resetIdCounter(): void                             // Reset ID counter
 uuid(): string                                     // Generate UUID v4
 deepMerge<T>(target: T, source: Partial<T>): T    // Deep merge objects
 ```
@@ -196,39 +199,24 @@ deepMerge<T>(target: T, source: Partial<T>): T    // Deep merge objects
 ```typescript
 STANDARD_CATALOG_ID  // Standard A2UI catalog URL
 A2UI_EXTENSION_URI   // A2UI v0.9 extension URI
-A2UI_EXTENSION_URI_V08  // A2UI v0.8 extension URI
 A2UI_MIME_TYPE       // A2UI MIME type (application/json+a2ui)
 ```
 
-## Protocol Versions
+## v0.9 Message Format
 
-### v0.9 (Prompt-first)
-Optimized for prompt-first embedding, more concise format:
-- `createSurface` - Create a new surface with catalog ID
-- `updateComponents` - Update components with flat component list
-- `updateDataModel` - Update data model with JSON Patch-like operations
-- `deleteSurface` - Delete surface
-
-### v0.8 (Structured output)
-Optimized for LLM structured output:
-- `beginRendering` - Signal to begin rendering with root component
-- `surfaceUpdate` - Update components
-- `dataModelUpdate` - Update data model using ValueMap format
-- `deleteSurface` - Delete surface
-
-## Type Guards
+A2UI v0.9 uses a cleaner, flatter format:
 
 ```typescript
-import { isV08Message, isV09Message } from '@zhama/a2ui-core';
+// Component format
+{ id: 'title', component: 'Text', text: 'Hello World', usageHint: 'h1' }
 
-if (isV09Message(message)) {
-  // Handle v0.9 message
-} else if (isV08Message(message)) {
-  // Handle v0.8 message
-}
+// Messages
+{ createSurface: { surfaceId: '@chat', catalogId: '...' } }
+{ updateComponents: { surfaceId: '@chat', components: [...] } }
+{ updateDataModel: { surfaceId: '@chat', op: 'replace', value: { ... } } }
+{ deleteSurface: { surfaceId: '@chat' } }
 ```
 
 ## License
 
 MIT
-

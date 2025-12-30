@@ -1,42 +1,43 @@
 /**
  * Message Builder
  *
- * 提供 A2UI 协议消息的构建工具函数
- * 支持 v0.8 和 v0.9 两种消息格式
+ * 提供 A2UI v0.9 协议消息的构建工具函数
+ *
+ * v0.9 消息类型：
+ * - createSurface: 创建新的 UI Surface
+ * - updateComponents: 更新组件
+ * - updateDataModel: 更新数据模型 (JSON Patch 风格)
+ * - deleteSurface: 删除 Surface
+ *
+ * 参考: https://a2ui.org/
  */
 
 import type {
-  // v0.9
   CreateSurfaceMessage,
   UpdateComponentsMessage,
   UpdateDataModelMessage,
   DeleteSurfaceMessage,
   ServerToClientMessageV09,
-  // v0.8
-  BeginRenderingMessage,
-  SurfaceUpdateMessage,
-  DataModelUpdateMessage,
-  ServerToClientMessageV08,
-  ComponentInstanceV08,
-  ValueMap,
-  // Common
   ComponentInstance,
   DataObject,
-  DataValue,
 } from '../types';
 import { STANDARD_CATALOG_ID } from '../types';
-
-import { objectToValueMap, valueToValueMap } from './data-model-builder';
 
 // ============================================================================
 // v0.9 消息构建器
 // ============================================================================
 
 /**
- * 创建 CreateSurface 消息 (v0.9)
+ * 创建 CreateSurface 消息
  *
  * @param surfaceId - Surface ID
  * @param catalogId - Catalog ID（默认为标准目录）
+ *
+ * @example
+ * ```typescript
+ * const msg = createSurface('my-surface');
+ * // { createSurface: { surfaceId: 'my-surface', catalogId: '...' } }
+ * ```
  */
 export function createSurface(
   surfaceId: string,
@@ -51,10 +52,16 @@ export function createSurface(
 }
 
 /**
- * 创建 UpdateComponents 消息 (v0.9)
+ * 创建 UpdateComponents 消息
  *
  * @param surfaceId - Surface ID
  * @param components - 组件列表
+ *
+ * @example
+ * ```typescript
+ * const title = text('Hello', { id: 'title' });
+ * const msg = updateComponents('my-surface', [title]);
+ * ```
  */
 export function updateComponents(
   surfaceId: string,
@@ -69,12 +76,24 @@ export function updateComponents(
 }
 
 /**
- * 创建 UpdateDataModel 消息 (v0.9)
+ * 创建 UpdateDataModel 消息
  *
  * @param surfaceId - Surface ID
  * @param value - 数据值
- * @param path - 数据路径（可选）
+ * @param path - 数据路径（可选，默认为根路径）
  * @param op - 操作类型（默认为 replace）
+ *
+ * @example
+ * ```typescript
+ * // 替换整个数据模型
+ * updateDataModel('my-surface', { user: { name: 'John' } });
+ *
+ * // 更新特定路径
+ * updateDataModel('my-surface', 'Jane', '/user/name', 'replace');
+ *
+ * // 添加数据
+ * updateDataModel('my-surface', 'new-item', '/items/-', 'add');
+ * ```
  */
 export function updateDataModel(
   surfaceId: string,
@@ -93,7 +112,7 @@ export function updateDataModel(
 }
 
 /**
- * 创建 DeleteSurface 消息 (v0.9)
+ * 创建 DeleteSurface 消息
  *
  * @param surfaceId - 要删除的 Surface ID
  */
@@ -110,6 +129,21 @@ export function deleteSurface(surfaceId: string): DeleteSurfaceMessage {
  *
  * @param options - 选项
  * @returns 消息数组（可直接作为 JSONL 流发送）
+ *
+ * @example
+ * ```typescript
+ * const title = h1('Welcome', { id: 'title' });
+ * const root = column(['title'], { id: 'root' });
+ *
+ * const messages = createV09Messages({
+ *   surfaceId: '@chat',
+ *   components: [title, root],
+ *   dataModel: { user: { name: 'John' } }
+ * });
+ *
+ * // 发送为 JSONL 流
+ * const jsonl = messagesToJsonl(messages);
+ * ```
  */
 export function createV09Messages(options: {
   surfaceId: string;
@@ -132,143 +166,7 @@ export function createV09Messages(options: {
 }
 
 // ============================================================================
-// v0.8 消息构建器
-// ============================================================================
-
-/**
- * 创建 BeginRendering 消息 (v0.8)
- *
- * @param rootId - 根组件 ID
- * @param surfaceId - Surface ID
- * @param styles - 样式配置
- */
-export function beginRendering(
-  rootId: string,
-  surfaceId = '@default',
-  styles?: Record<string, string>
-): BeginRenderingMessage {
-  return {
-    beginRendering: {
-      surfaceId,
-      root: rootId,
-      ...(styles && { styles }),
-    },
-  };
-}
-
-/**
- * 创建 SurfaceUpdate 消息 (v0.8)
- *
- * @param components - 组件定义数组
- * @param surfaceId - Surface ID
- */
-export function surfaceUpdate(
-  components: ComponentInstanceV08[],
-  surfaceId = '@default'
-): SurfaceUpdateMessage {
-  return {
-    surfaceUpdate: {
-      surfaceId,
-      components,
-    },
-  };
-}
-
-/**
- * 创建 DataModelUpdate 消息 (v0.8)
- *
- * @param contents - ValueMap 数组
- * @param surfaceId - Surface ID
- * @param path - 数据路径（可选）
- */
-export function dataModelUpdate(
-  contents: ValueMap[],
-  surfaceId = '@default',
-  path?: string
-): DataModelUpdateMessage {
-  return {
-    dataModelUpdate: {
-      surfaceId,
-      contents,
-      ...(path && { path }),
-    },
-  };
-}
-
-/**
- * 创建 DataModel 初始化消息 (v0.8)
- *
- * @param data - 初始数据对象
- * @param surfaceId - Surface ID
- */
-export function dataModelInit(data: DataObject, surfaceId = '@default'): DataModelUpdateMessage {
-  return dataModelUpdate(objectToValueMap(data), surfaceId);
-}
-
-/**
- * 创建路径更新消息 (v0.8)
- *
- * @param path - 数据路径
- * @param value - 新值
- * @param surfaceId - Surface ID
- */
-export function pathUpdate(
-  path: string,
-  value: DataValue,
-  surfaceId = '@default'
-): DataModelUpdateMessage {
-  return {
-    dataModelUpdate: {
-      surfaceId,
-      path,
-      contents: [valueToValueMap('', value)],
-    },
-  };
-}
-
-/**
- * 创建 DeleteSurface 消息 (v0.8)
- *
- * @param surfaceId - 要删除的 Surface ID
- */
-export function deleteSurfaceV08(surfaceId: string): {
-  deleteSurface: { surfaceId: string };
-} {
-  return {
-    deleteSurface: {
-      surfaceId,
-    },
-  };
-}
-
-/**
- * 创建完整的 v0.8 消息数组
- *
- * @param options - 选项
- * @returns 消息数组
- */
-export function createV08Messages(options: {
-  rootId: string;
-  components: ComponentInstanceV08[];
-  dataModel?: DataObject;
-  surfaceId?: string;
-  styles?: Record<string, string>;
-}): ServerToClientMessageV08[] {
-  const { rootId, components, dataModel, surfaceId = '@default', styles } = options;
-
-  const messages: ServerToClientMessageV08[] = [surfaceUpdate(components, surfaceId)];
-
-  if (dataModel) {
-    messages.push(dataModelInit(dataModel, surfaceId));
-  }
-
-  messages.push(beginRendering(rootId, surfaceId, styles));
-
-  return messages;
-}
-
-// ============================================================================
-// 通用消息工具
+// 消息工具
 // ============================================================================
 
 /**
@@ -276,10 +174,14 @@ export function createV08Messages(options: {
  *
  * @param messages - 消息数组
  * @returns JSONL 格式字符串
+ *
+ * @example
+ * ```typescript
+ * const jsonl = messagesToJsonl(messages);
+ * // 每行一个 JSON 对象
+ * ```
  */
-export function messagesToJsonl(
-  messages: Array<ServerToClientMessageV08 | ServerToClientMessageV09>
-): string {
+export function messagesToJsonl(messages: ServerToClientMessageV09[]): string {
   return messages.map((msg) => JSON.stringify(msg)).join('\n');
 }
 
@@ -289,11 +191,9 @@ export function messagesToJsonl(
  * @param jsonl - JSONL 格式字符串
  * @returns 消息数组
  */
-export function jsonlToMessages(
-  jsonl: string
-): Array<ServerToClientMessageV08 | ServerToClientMessageV09> {
+export function jsonlToMessages(jsonl: string): ServerToClientMessageV09[] {
   return jsonl
     .split('\n')
     .filter((line) => line.trim())
-    .map((line) => JSON.parse(line) as ServerToClientMessageV08 | ServerToClientMessageV09);
+    .map((line) => JSON.parse(line) as ServerToClientMessageV09);
 }

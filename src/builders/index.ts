@@ -1,7 +1,12 @@
 /**
  * A2UI Builders Module
  *
- * 提供便捷的函数来构建标准的 A2UI 协议消息和组件
+ * 提供便捷的函数来构建 A2UI v0.9 协议消息和组件
+ *
+ * 注意：v0.9 虽然官方标记为 Draft，但格式更简洁现代。
+ * 本库统一使用 v0.9 格式。
+ *
+ * 参考: https://a2ui.org/
  */
 
 // ============================================================================
@@ -11,7 +16,7 @@
 export { generateId, resetIdCounter, getIdCounter } from './id-generator';
 
 // ============================================================================
-// Component Builder
+// Component Builder (v0.9 格式)
 // ============================================================================
 
 export {
@@ -68,24 +73,16 @@ export {
 } from './component-builder';
 
 // ============================================================================
-// Message Builder
+// Message Builder (v0.9 格式)
 // ============================================================================
 
 export {
-  // v0.9 消息
+  // v0.9 消息构建
   createSurface,
   updateComponents,
   updateDataModel,
   deleteSurface,
   createV09Messages,
-  // v0.8 消息
-  beginRendering,
-  surfaceUpdate,
-  dataModelUpdate,
-  dataModelInit,
-  pathUpdate,
-  deleteSurfaceV08,
-  createV08Messages,
   // 工具
   messagesToJsonl,
   jsonlToMessages,

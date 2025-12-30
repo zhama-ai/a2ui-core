@@ -1,6 +1,6 @@
 {
   "name": "@zhama/a2ui-core",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "description": "A2UI Protocol Core Library - Framework-agnostic TypeScript types and builders for A2UI protocol",
   "type": "module",
   "main": "dist/index.cjs",
@@ -36,6 +36,12 @@
       "import": "./dist/utils/index.js",
       "require": "./dist/utils/index.cjs",
       "default": "./dist/utils/index.js"
+    },
+    "./surface": {
+      "types": "./dist/surface/index.d.ts",
+      "import": "./dist/surface/index.js",
+      "require": "./dist/surface/index.cjs",
+      "default": "./dist/surface/index.js"
     }
   },
   "files": [

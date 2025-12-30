@@ -130,6 +130,7 @@ export {
   generateId,
   resetIdCounter,
   getIdCounter,
+  // ========== Component Builder (v0.9) ==========
   // Component Builder Types
   type ComponentOptions,
   type TextOptions,
@@ -180,23 +181,16 @@ export {
   h5,
   caption,
   body,
-  // Message Builder - v0.9
+  // ========== Message Builders (v0.9) ==========
   createSurface,
   updateComponents,
   updateDataModel,
   deleteSurface,
   createV09Messages,
-  // Message Builder - v0.8
-  beginRendering,
-  surfaceUpdate,
-  dataModelUpdate,
-  dataModelInit,
-  pathUpdate,
-  deleteSurfaceV08,
-  createV08Messages,
   // Message Tools
   messagesToJsonl,
   jsonlToMessages,
+  // ========== Data Model Builder ==========
   // Data Model Builder Types
   type PathMappings,
   type UpdateDataItem,
@@ -230,3 +224,27 @@ export {
 // ============================================================================
 
 export { isPathBinding, getLiteralValue, getPathValue, path, deepMerge, uuid } from './utils';
+
+// ============================================================================
+// Surface - Surface 构建工具 (v0.9 格式)
+// ============================================================================
+
+export {
+  // Surface IDs
+  SURFACE_IDS,
+  type SurfaceIdType,
+  type SurfaceConfig,
+  generateSurfaceId,
+  resetSurfaceIdCounter,
+  // Surface Builder
+  type SurfaceResult,
+  createA2UISurface,
+  createA2UISurfaceWithData,
+  createDeleteSurfaceMessage,
+  // Surface 便捷函数
+  createChatSurface,
+  createRecommendationSurface,
+  createInputFormSurface,
+  createOrchestrationSurface,
+  createStatusSurface,
+} from './surface';

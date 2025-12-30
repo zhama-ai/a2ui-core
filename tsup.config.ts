@@ -11,6 +11,7 @@ export default defineConfig({
     'builders/index': 'src/builders/index.ts',
     'validators/index': 'src/validators/index.ts',
     'utils/index': 'src/utils/index.ts',
+    'surface/index': 'src/surface/index.ts',
   },
 
   // 输出格式：CJS + ESM 双格式
