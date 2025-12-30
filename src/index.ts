@@ -1,7 +1,7 @@
 /**
  * @zhama/a2ui-core
  *
- * A2UI Protocol Core Library
+ * A2UI Protocol Core Library - v0.9
  * Framework-agnostic TypeScript types and builders for A2UI protocol
  *
  * @example
@@ -42,7 +42,7 @@
  */
 
 // ============================================================================
-// Types - 类型定义
+// Types - 类型定义 (v0.9 only)
 // ============================================================================
 
 export type {
@@ -51,15 +51,9 @@ export type {
   NumberOrPath,
   BooleanOrPath,
   StringArrayOrPath,
-  StringValue,
-  NumberValue,
-  BooleanValue,
-  StringArrayValue,
   ContextValue,
   // Components
   Action,
-  ActionContextItem,
-  ActionV08,
   ComponentCommon,
   TextComponent,
   ImageComponent,
@@ -92,19 +86,12 @@ export type {
   UpdateDataModelMessage,
   DeleteSurfaceMessage,
   ServerToClientMessageV09,
-  // Messages v0.8
-  BeginRenderingMessage,
-  SurfaceUpdateMessage,
-  ComponentInstanceV08,
-  DataModelUpdateMessage,
-  DeleteSurfaceMessageV08,
-  ValueMap,
-  ServerToClientMessageV08,
-  // Generic Messages
-  ServerToClientMessage,
   // Client Messages
   UserActionEvent,
   DataChangeEvent,
+  ClientErrorMessage,
+  ValidationFailedError,
+  GenericError,
   ClientToServerMessage,
   // Data Types
   DataValue,
@@ -112,14 +99,10 @@ export type {
   DataArray,
 } from './types';
 
-export {
-  isV08Message,
-  isV09Message,
-  STANDARD_CATALOG_ID,
-  A2UI_EXTENSION_URI,
-  A2UI_EXTENSION_URI_V08,
-  A2UI_MIME_TYPE,
-} from './types';
+// ServerToClientMessage 别名（纯 v0.9）
+export type { ServerToClientMessageV09 as ServerToClientMessage } from './types';
+
+export { isV09Message, STANDARD_CATALOG_ID, A2UI_EXTENSION_URI, A2UI_MIME_TYPE } from './types';
 
 // ============================================================================
 // Builders - 构建器
@@ -209,14 +192,22 @@ export {
 // ============================================================================
 
 export {
+  // 基础验证
   type ValidationResult,
   type ValidationError,
   type ValidationWarning,
   type ValidationOptions,
   validateV09Message,
-  validateV08Message,
   validateMessage,
   validateMessages,
+  // Schema 验证（基于官方 JSON Schema）
+  A2UISchemaValidator,
+  type SchemaValidationResult,
+  type SchemaValidationError,
+  getSchemaValidator,
+  validateWithSchema,
+  validateClientMessage,
+  validateMessagesWithSchema,
 } from './validators';
 
 // ============================================================================

@@ -10,7 +10,7 @@ import {
   path,
   deepMerge,
   uuid,
-} from './index';
+} from '../src/utils/index';
 
 describe('Utils', () => {
   describe('isPathBinding', () => {

@@ -1,7 +1,7 @@
 /**
- * A2UI Types Module
+ * A2UI Types Module - v0.9
  *
- * 导出所有 A2UI 协议相关的类型定义
+ * 导出所有 A2UI v0.9 协议相关的类型定义
  */
 
 // Primitives
@@ -10,10 +10,6 @@ export type {
   NumberOrPath,
   BooleanOrPath,
   StringArrayOrPath,
-  StringValue,
-  NumberValue,
-  BooleanValue,
-  StringArrayValue,
   ContextValue,
 } from './primitives';
 
@@ -21,8 +17,6 @@ export type {
 export type {
   // Action
   Action,
-  ActionContextItem,
-  ActionV08,
   // Common
   ComponentCommon,
   // Content components
@@ -54,29 +48,22 @@ export type {
   ComponentInstance,
 } from './components';
 
-// Messages
+// Messages (v0.9 only)
 export type {
   // Theme
   Theme,
-  // v0.9 messages
+  // Server to Client (v0.9)
   CreateSurfaceMessage,
   UpdateComponentsMessage,
   UpdateDataModelMessage,
   DeleteSurfaceMessage,
   ServerToClientMessageV09,
-  // v0.8 messages
-  BeginRenderingMessage,
-  SurfaceUpdateMessage,
-  ComponentInstanceV08,
-  DataModelUpdateMessage,
-  DeleteSurfaceMessageV08,
-  ValueMap,
-  ServerToClientMessageV08,
-  // Generic
-  ServerToClientMessage,
-  // Client messages
+  // Client to Server
   UserActionEvent,
   DataChangeEvent,
+  ClientErrorMessage,
+  ValidationFailedError,
+  GenericError,
   ClientToServerMessage,
   // Data types
   DataValue,
@@ -84,11 +71,4 @@ export type {
   DataArray,
 } from './messages';
 
-export {
-  isV08Message,
-  isV09Message,
-  STANDARD_CATALOG_ID,
-  A2UI_EXTENSION_URI,
-  A2UI_EXTENSION_URI_V08,
-  A2UI_MIME_TYPE,
-} from './messages';
+export { isV09Message, STANDARD_CATALOG_ID, A2UI_EXTENSION_URI, A2UI_MIME_TYPE } from './messages';

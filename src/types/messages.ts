@@ -221,17 +221,22 @@ export function isV08Message(message: ServerToClientMessage): message is ServerT
 }
 
 // ============================================================================
-// 客户端到服务器消息
+// 客户端到服务器消息 (v0.9)
 // ============================================================================
 
 /**
  * 用户操作事件
+ * @see https://a2ui.dev/specification/0.9/client_to_server.json
  */
 export interface UserActionEvent {
   /**
-   * 操作名称
+   * 操作名称（来自组件的 action.name）
    */
-  actionName: string;
+  name: string;
+  /**
+   * 触发操作的 Surface ID
+   */
+  surfaceId: string;
   /**
    * 触发组件的 ID
    */
@@ -241,9 +246,9 @@ export interface UserActionEvent {
    */
   timestamp: string;
   /**
-   * 操作上下文（解析后的值）
+   * 操作上下文（解析数据绑定后的键值对）
    */
-  context?: Record<string, unknown>;
+  context: Record<string, unknown>;
 }
 
 /**
@@ -269,11 +274,63 @@ export interface DataChangeEvent {
 }
 
 /**
+ * 验证失败错误
+ * @see https://a2ui.dev/specification/0.9/client_to_server.json
+ */
+export interface ValidationFailedError {
+  /**
+   * 错误代码
+   */
+  code: 'VALIDATION_FAILED';
+  /**
+   * 发生错误的 Surface ID
+   */
+  surfaceId: string;
+  /**
+   * 验证失败的字段路径（JSON Pointer 格式）
+   * @example "/components/0/text"
+   */
+  path: string;
+  /**
+   * 错误描述
+   */
+  message: string;
+}
+
+/**
+ * 通用错误
+ */
+export interface GenericError {
+  /**
+   * 错误代码（非 VALIDATION_FAILED）
+   */
+  code: string;
+  /**
+   * 发生错误的 Surface ID
+   */
+  surfaceId: string;
+  /**
+   * 错误描述
+   */
+  message: string;
+  /**
+   * 其他附加信息
+   */
+  [key: string]: unknown;
+}
+
+/**
+ * 客户端错误消息
+ */
+export type ClientErrorMessage = ValidationFailedError | GenericError;
+
+/**
  * 客户端到服务器消息
  */
 export type ClientToServerMessage =
   | { userAction: UserActionEvent }
-  | { dataChange: DataChangeEvent };
+  | { dataChange: DataChangeEvent }
+  | { error: ClientErrorMessage };
 
 // ============================================================================
 // 数据类型

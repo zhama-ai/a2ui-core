@@ -30,8 +30,8 @@ import {
   h5,
   caption,
   body,
-} from './component-builder';
-import { resetIdCounter } from './id-generator';
+} from '../src/builders/component-builder';
+import { resetIdCounter } from '../src/builders/id-generator';
 
 describe('Component Builder', () => {
   beforeEach(() => {

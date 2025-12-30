@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { generateId, resetIdCounter, getIdCounter } from './id-generator';
+import { generateId, resetIdCounter, getIdCounter } from '../src/builders/id-generator';
 
 describe('ID Generator', () => {
   beforeEach(() => {

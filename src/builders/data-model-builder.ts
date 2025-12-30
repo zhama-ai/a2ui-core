@@ -2,10 +2,22 @@
  * Data Model Builder
  *
  * 提供 DataModel 相关的构建工具函数
- * 符合 A2UI 协议的 ValueMap 格式
+ * 包括 v0.9 JSON 对象格式和 v0.8 ValueMap 格式转换
  */
 
-import type { ValueMap, DataValue, DataObject } from '../types';
+import type { DataValue, DataObject } from '../types';
+
+/**
+ * ValueMap 格式 - 用于 v0.8 兼容和内部数据转换
+ * @internal
+ */
+export interface ValueMap {
+  key: string;
+  valueString?: string;
+  valueNumber?: number;
+  valueBoolean?: boolean;
+  valueMap?: ValueMap[];
+}
 
 /**
  * 路径映射表类型

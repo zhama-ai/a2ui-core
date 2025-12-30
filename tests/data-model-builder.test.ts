@@ -10,7 +10,7 @@ import {
   updatesToValueMap,
   flattenObjectToValueMap,
   valueMapToObject,
-} from './data-model-builder';
+} from '../src/builders/data-model-builder';
 
 describe('Data Model Builder', () => {
   describe('valueToValueMap', () => {
