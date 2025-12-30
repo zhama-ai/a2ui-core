@@ -1,0 +1,116 @@
+{
+  "name": "@zhama/a2ui-core",
+  "version": "0.1.0",
+  "description": "A2UI Protocol Core Library - Framework-agnostic TypeScript types and builders for A2UI protocol",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js",
+      "require": "./dist/types/index.cjs",
+      "default": "./dist/types/index.js"
+    },
+    "./builders": {
+      "types": "./dist/builders/index.d.ts",
+      "import": "./dist/builders/index.js",
+      "require": "./dist/builders/index.cjs",
+      "default": "./dist/builders/index.js"
+    },
+    "./validators": {
+      "types": "./dist/validators/index.d.ts",
+      "import": "./dist/validators/index.js",
+      "require": "./dist/validators/index.cjs",
+      "default": "./dist/validators/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js",
+      "require": "./dist/utils/index.cjs",
+      "default": "./dist/utils/index.js"
+    }
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.cjs",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.cts"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm run clean && pnpm run build",
+    "prepack": "pnpm run type-check && pnpm run lint"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@types/node": "^22.16.5",
+    "@vitest/coverage-v8": "^4.0.16",
+    "@vitest/ui": "^4.0.16",
+    "eslint": "^9.15.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "globals": "^15.12.0",
+    "prettier": "^3.3.3",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.15.0",
+    "vitest": "^4.0.16"
+  },
+  "keywords": [
+    "a2ui",
+    "agent-to-ui",
+    "ai",
+    "artificial-intelligence",
+    "llm",
+    "large-language-model",
+    "protocol",
+    "ui-generation",
+    "dynamic-ui",
+    "typescript",
+    "google-a2ui",
+    "streaming-ui",
+    "agent"
+  ],
+  "author": {
+    "name": "Zhama AI",
+    "email": "support@zhama.com",
+    "url": "https://zhama.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhama/a2ui-core.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zhama/a2ui-core/issues",
+    "email": "support@zhama.com"
+  },
+  "homepage": "https://github.com/zhama/a2ui-core#readme",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
