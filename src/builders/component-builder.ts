@@ -36,6 +36,8 @@ export interface ComponentOptions {
   id?: string;
   /** 在 Row/Column 中的权重 */
   weight?: number;
+  /** 额外的 CSS 类名（A2UI 工具类或自定义类） */
+  classes?: string[];
 }
 
 /**
@@ -180,13 +182,14 @@ export interface SliderOptions extends ComponentOptions {
  * text({ path: '/user/name' });
  */
 export function text(content: StringOrPath, options: TextOptions = {}): ComponentInstance {
-  const { id = generateId('text'), weight, usageHint } = options;
+  const { id = generateId('text'), weight, usageHint, classes } = options;
   return {
     id,
     component: 'Text',
     text: content,
     ...(weight !== undefined && { weight }),
     ...(usageHint && { usageHint }),
+    ...(classes && classes.length > 0 && { classes }),
   };
 }
 
@@ -296,7 +299,7 @@ export function row(children: ChildrenProperty, options: LayoutOptions = {}): Co
  * @param options - 布局选项
  */
 export function column(children: ChildrenProperty, options: LayoutOptions = {}): ComponentInstance {
-  const { id = generateId('column'), weight, alignment, distribution } = options;
+  const { id = generateId('column'), weight, alignment, distribution, classes } = options;
   return {
     id,
     component: 'Column',
@@ -304,6 +307,7 @@ export function column(children: ChildrenProperty, options: LayoutOptions = {}):
     ...(weight !== undefined && { weight }),
     ...(alignment && { alignment }),
     ...(distribution && { distribution }),
+    ...(classes && classes.length > 0 && { classes }),
   };
 }
 
@@ -332,12 +336,13 @@ export function list(children: ChildrenProperty, options: ListOptions = {}): Com
  * @param options - 卡片选项
  */
 export function card(childId: string, options: CardOptions = {}): ComponentInstance {
-  const { id = generateId('card'), weight } = options;
+  const { id = generateId('card'), weight, classes } = options;
   return {
     id,
     component: 'Card',
     child: childId,
     ...(weight !== undefined && { weight }),
+    ...(classes && classes.length > 0 && { classes }),
   };
 }
 

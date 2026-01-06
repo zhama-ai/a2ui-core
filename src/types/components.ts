@@ -67,6 +67,12 @@ export interface ComponentCommon {
    * 在 Row 或 Column 中的相对权重（类似 CSS flex-grow）
    */
   weight?: number;
+
+  /**
+   * 额外的 CSS 类名（A2UI 工具类或自定义类）
+   * @example ['a2-overflow-y-auto', 'a2-max-h-20']
+   */
+  classes?: string[];
 }
 
 // ============================================================================
