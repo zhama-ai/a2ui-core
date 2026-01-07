@@ -200,14 +200,6 @@ export {
   validateV09Message,
   validateMessage,
   validateMessages,
-  // Schema 验证（基于官方 JSON Schema）
-  A2UISchemaValidator,
-  type SchemaValidationResult,
-  type SchemaValidationError,
-  getSchemaValidator,
-  validateWithSchema,
-  validateClientMessage,
-  validateMessagesWithSchema,
 } from './validators';
 
 // ============================================================================

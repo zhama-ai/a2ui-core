@@ -15,16 +15,3 @@ export {
   validateMessage,
   validateMessages,
 } from './message-validator';
-
-export {
-  // Schema 验证器类
-  A2UISchemaValidator,
-  // Schema 验证类型
-  type SchemaValidationResult,
-  type SchemaValidationError,
-  // 便捷函数
-  getSchemaValidator,
-  validateWithSchema,
-  validateClientMessage,
-  validateMessagesWithSchema,
-} from './schema-validator';
