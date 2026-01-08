@@ -20,6 +20,9 @@ import type {
   NumberOrPath,
   BooleanOrPath,
   StringArrayOrPath,
+  ChartType,
+  ChartSeries,
+  ChartAxisConfig,
 } from '../types';
 
 import { generateId } from './id-generator';
@@ -162,6 +165,20 @@ export interface SliderOptions extends ComponentOptions {
   label?: StringOrPath;
   min?: number;
   max?: number;
+}
+
+/**
+ * Chart 组件选项
+ */
+export interface ChartOptions extends ComponentOptions {
+  title?: StringOrPath;
+  xAxis?: ChartAxisConfig;
+  yAxis?: ChartAxisConfig;
+  legend?: boolean;
+  tooltip?: boolean;
+  height?: number;
+  width?: number | string;
+  echartsOption?: Record<string, unknown> | { path: string };
 }
 
 // ============================================================================
@@ -548,6 +565,97 @@ export function slider(value: NumberOrPath, options: SliderOptions = {}): Compon
     ...(min !== undefined && { min }),
     ...(max !== undefined && { max }),
   };
+}
+
+// ============================================================================
+// 数据可视化组件
+// ============================================================================
+
+/**
+ * 创建 Chart 组件
+ *
+ * @param chartType - 图表类型
+ * @param series - 数据系列
+ * @param options - 组件选项
+ *
+ * @example
+ * // 简单折线图
+ * chart('line', [
+ *   { name: '销售额', data: [120, 200, 150, 80, 70, 110, 130] }
+ * ], {
+ *   title: '月度销售趋势',
+ *   xAxis: { type: 'category', data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }
+ * });
+ *
+ * // 数据绑定
+ * chart('bar', { path: '/chart/series' }, {
+ *   title: { path: '/chart/title' },
+ *   xAxis: { type: 'category', data: { path: '/chart/categories' } }
+ * });
+ */
+export function chart(
+  chartType: ChartType,
+  series: ChartSeries[] | { path: string },
+  options: ChartOptions = {}
+): ComponentInstance {
+  const {
+    id = generateId('chart'),
+    weight,
+    title,
+    xAxis,
+    yAxis,
+    legend,
+    tooltip,
+    height,
+    width,
+    echartsOption,
+  } = options;
+
+  return {
+    id,
+    component: 'Chart',
+    chartType,
+    series,
+    ...(weight !== undefined && { weight }),
+    ...(title && { title }),
+    ...(xAxis && { xAxis }),
+    ...(yAxis && { yAxis }),
+    ...(legend !== undefined && { legend }),
+    ...(tooltip !== undefined && { tooltip }),
+    ...(height !== undefined && { height }),
+    ...(width !== undefined && { width }),
+    ...(echartsOption && { echartsOption }),
+  };
+}
+
+/**
+ * 创建折线图组件（便捷函数）
+ */
+export function lineChart(
+  series: ChartSeries[] | { path: string },
+  options: ChartOptions = {}
+): ComponentInstance {
+  return chart('line', series, options);
+}
+
+/**
+ * 创建柱状图组件（便捷函数）
+ */
+export function barChart(
+  series: ChartSeries[] | { path: string },
+  options: ChartOptions = {}
+): ComponentInstance {
+  return chart('bar', series, options);
+}
+
+/**
+ * 创建饼图组件（便捷函数）
+ */
+export function pieChart(
+  series: ChartSeries[] | { path: string },
+  options: ChartOptions = {}
+): ComponentInstance {
+  return chart('pie', series, options);
 }
 
 // ============================================================================

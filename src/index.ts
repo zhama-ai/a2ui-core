@@ -75,6 +75,11 @@ export type {
   DateTimeInputComponent,
   ChoicePickerComponent,
   SliderComponent,
+  // Data visualization components
+  ChartComponent,
+  ChartType,
+  ChartSeries,
+  ChartAxisConfig,
   AnyComponent,
   ComponentType,
   ComponentInstance,
@@ -134,6 +139,7 @@ export {
   type DateTimeInputOptions,
   type ChoicePickerOptions,
   type SliderOptions,
+  type ChartOptions,
   // Content Components
   text,
   image,
@@ -155,6 +161,11 @@ export {
   dateTimeInput,
   choicePicker,
   slider,
+  // Data Visualization Components
+  chart,
+  lineChart,
+  barChart,
+  pieChart,
   // Convenience Components
   textButton,
   h1,

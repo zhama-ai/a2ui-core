@@ -40,6 +40,7 @@ export {
   type DateTimeInputOptions,
   type ChoicePickerOptions,
   type SliderOptions,
+  type ChartOptions,
   // 内容组件
   text,
   image,
@@ -61,6 +62,11 @@ export {
   dateTimeInput,
   choicePicker,
   slider,
+  // 数据可视化组件
+  chart,
+  lineChart,
+  barChart,
+  pieChart,
   // 便捷组件
   textButton,
   h1,

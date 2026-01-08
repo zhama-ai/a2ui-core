@@ -42,6 +42,11 @@ export type {
   DateTimeInputComponent,
   ChoicePickerComponent,
   SliderComponent,
+  // Data visualization components
+  ChartComponent,
+  ChartType,
+  ChartSeries,
+  ChartAxisConfig,
   // Union types
   AnyComponent,
   ComponentType,

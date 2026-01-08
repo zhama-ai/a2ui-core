@@ -488,6 +488,98 @@ export interface SliderComponent {
 }
 
 // ============================================================================
+// 数据可视化组件
+// ============================================================================
+
+/**
+ * Chart 图表类型
+ */
+export type ChartType = 'line' | 'bar' | 'pie' | 'scatter' | 'area' | 'radar' | 'gauge';
+
+/**
+ * Chart 数据系列
+ */
+export interface ChartSeries {
+  /**
+   * 系列名称
+   */
+  name?: string;
+  /**
+   * 系列类型（可覆盖 chartType）
+   */
+  type?: ChartType;
+  /**
+   * 数据点数组
+   */
+  data: number[] | Array<{ name?: string; value: number }> | { path: string };
+}
+
+/**
+ * Chart 坐标轴配置
+ */
+export interface ChartAxisConfig {
+  /**
+   * 坐标轴类型
+   */
+  type?: 'category' | 'value' | 'time' | 'log';
+  /**
+   * 坐标轴数据（category 类型时使用）
+   */
+  data?: string[] | { path: string };
+  /**
+   * 坐标轴名称
+   */
+  name?: string;
+}
+
+/**
+ * Chart 组件 - 图表可视化
+ */
+export interface ChartComponent {
+  component: 'Chart';
+  /**
+   * 图表类型
+   */
+  chartType: ChartType;
+  /**
+   * 图表标题
+   */
+  title?: StringOrPath;
+  /**
+   * 数据系列
+   */
+  series: ChartSeries[] | { path: string };
+  /**
+   * X 轴配置
+   */
+  xAxis?: ChartAxisConfig;
+  /**
+   * Y 轴配置
+   */
+  yAxis?: ChartAxisConfig;
+  /**
+   * 是否显示图例
+   */
+  legend?: boolean;
+  /**
+   * 是否显示 tooltip
+   */
+  tooltip?: boolean;
+  /**
+   * 图表高度（像素）
+   */
+  height?: number;
+  /**
+   * 图表宽度（像素或百分比字符串）
+   */
+  width?: number | string;
+  /**
+   * ECharts 原生 option 扩展（高级用法）
+   */
+  echartsOption?: Record<string, unknown> | { path: string };
+}
+
+// ============================================================================
 // 组件类型联合
 // ============================================================================
 
@@ -512,7 +604,8 @@ export type AnyComponent =
   | TextFieldComponent
   | DateTimeInputComponent
   | ChoicePickerComponent
-  | SliderComponent;
+  | SliderComponent
+  | ChartComponent;
 
 /**
  * 组件类型名称
