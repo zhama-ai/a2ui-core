@@ -1,131 +1,176 @@
 /**
  * A2UI Component Types
  *
- * 标准组件目录中的组件类型定义
- * Based on A2UI v0.9 specification
+ * 组件类型定义，严格按照 A2UI v0.9 官方规范
+ * @see https://a2ui.dev/specification/v0_9/standard_catalog.json
  */
 
-import type { StringOrPath, NumberOrPath, BooleanOrPath, StringArrayOrPath } from './primitives';
+import type {
+  DataBinding,
+  DynamicString,
+  DynamicNumber,
+  DynamicBoolean,
+  DynamicStringList,
+  DynamicValue,
+  FunctionCall,
+  AccessibilityAttributes,
+  Checkable,
+} from './primitives';
 
 // ============================================================================
 // Action
 // ============================================================================
 
 /**
- * 用户操作定义
- * Dispatched when interactive components (like Button) are activated
+ * 服务器端事件
+ * @see common_types.json#/$defs/Action (event variant)
  */
-export interface Action {
+export interface ActionEvent {
   /**
-   * 操作名称，用于标识操作类型
-   * @example "submit_form", "navigate", "select_item"
+   * 操作名称
    */
   name: string;
-
   /**
-   * 操作上下文，键值对形式
-   * Values can be literals or data bindings
+   * 操作上下文
    */
-  context?: Record<string, StringOrPath | NumberOrPath | BooleanOrPath>;
+  context?: Record<string, DynamicValue>;
 }
 
 /**
- * v0.8 格式的 Action 上下文项
+ * 操作定义
+ * @see common_types.json#/$defs/Action
  */
-export interface ActionContextItem {
-  key: string;
-  value: {
-    path?: string;
-    literalString?: string;
-    literalNumber?: number;
-    literalBoolean?: boolean;
-  };
-}
-
-/**
- * v0.8 格式的 Action
- */
-export interface ActionV08 {
-  name: string;
-  context?: ActionContextItem[];
-}
+export type Action = { event: ActionEvent } | { functionCall: FunctionCall };
 
 // ============================================================================
-// 基础组件公共属性
+// ComponentCommon
 // ============================================================================
 
 /**
  * 组件公共属性
+ * @see common_types.json#/$defs/ComponentCommon
  */
 export interface ComponentCommon {
   /**
    * 组件唯一标识符
    */
   id: string;
+  /**
+   * 无障碍属性
+   */
+  accessibility?: AccessibilityAttributes;
+}
 
+/**
+ * Catalog 组件公共属性
+ * @see standard_catalog.json#/$defs/CatalogComponentCommon
+ */
+export interface CatalogComponentCommon {
   /**
    * 在 Row 或 Column 中的相对权重（类似 CSS flex-grow）
+   * 注意：仅当组件是 Row 或 Column 的直接子组件时才可设置
    */
   weight?: number;
-
-  /**
-   * 额外的 CSS 类名（A2UI 工具类或自定义类）
-   * @example ['a2-overflow-y-auto', 'a2-max-h-20']
-   */
-  classes?: string[];
 }
 
 // ============================================================================
-// 内容组件
+// ChildList
 // ============================================================================
 
 /**
- * Text 组件 - 显示文本内容
+ * 子组件列表
+ * @see common_types.json#/$defs/ChildList
  */
-export interface TextComponent {
+export type ChildList =
+  | string[] // 静态子组件 ID 列表
+  | {
+      // 动态模板
+      componentId: string;
+      path: string;
+    };
+
+// ============================================================================
+// Content Components
+// ============================================================================
+
+/**
+ * Text 组件
+ * @see standard_catalog.json#/components/Text
+ */
+export interface TextComponent extends ComponentCommon, CatalogComponentCommon {
   component: 'Text';
   /**
-   * 文本内容，支持简单 Markdown
+   * 文本内容（支持简单 Markdown）
    */
-  text: StringOrPath;
+  text: DynamicString;
   /**
-   * 文本样式提示
+   * 文本样式变体
    */
-  usageHint?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body';
+  variant?: TextVariant;
 }
 
 /**
- * Image 组件 - 显示图片
+ * Text 组件变体
  */
-export interface ImageComponent {
+export type TextVariant = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body';
+
+/**
+ * Image 组件
+ * @see standard_catalog.json#/components/Image
+ */
+export interface ImageComponent extends ComponentCommon, CatalogComponentCommon {
   component: 'Image';
   /**
    * 图片 URL
    */
-  url: StringOrPath;
+  url: DynamicString;
   /**
-   * 图片适应方式
+   * 图片缩放模式（对应 CSS object-fit）
    */
   fit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   /**
-   * 图片尺寸/样式提示
+   * 图片样式变体
    */
-  usageHint?: 'icon' | 'avatar' | 'smallFeature' | 'mediumFeature' | 'largeFeature' | 'header';
+  variant?: ImageVariant;
 }
 
 /**
- * Icon 组件 - 显示图标
+ * Image 组件变体
  */
-export interface IconComponent {
+export type ImageVariant =
+  | 'icon'
+  | 'avatar'
+  | 'smallFeature'
+  | 'mediumFeature'
+  | 'largeFeature'
+  | 'header';
+
+/**
+ * 自定义 SVG 路径
+ * @see standard_catalog.json#/components/Icon/name (path variant)
+ */
+export interface CustomIconPath {
+  path: string;
+}
+
+/**
+ * Icon 组件
+ * @see standard_catalog.json#/components/Icon
+ */
+export interface IconComponent extends ComponentCommon, CatalogComponentCommon {
   component: 'Icon';
   /**
-   * 图标名称，支持标准图标集
+   * 图标名称
+   * - 标准图标名称字符串: "accountCircle"
+   * - 自定义 SVG 路径对象: { path: "M12 2L..." }
+   * - 数据绑定: { path: "/iconName" } (用于动态绑定)
    */
-  name: StringOrPath;
+  name: StandardIconName | CustomIconPath | DataBinding;
 }
 
 /**
  * 标准图标名称
+ * @see standard_catalog.json#/components/Icon/name
  */
 export type StandardIconName =
   | 'accountCircle'
@@ -189,237 +234,262 @@ export type StandardIconName =
   | 'warning';
 
 /**
- * Video 组件 - 显示视频
+ * Video 组件
+ * @see standard_catalog.json#/components/Video
  */
-export interface VideoComponent {
+export interface VideoComponent extends ComponentCommon, CatalogComponentCommon {
   component: 'Video';
   /**
    * 视频 URL
    */
-  url: StringOrPath;
+  url: DynamicString;
 }
 
 /**
- * AudioPlayer 组件 - 音频播放器
+ * AudioPlayer 组件
+ * @see standard_catalog.json#/components/AudioPlayer
  */
-export interface AudioPlayerComponent {
+export interface AudioPlayerComponent extends ComponentCommon, CatalogComponentCommon {
   component: 'AudioPlayer';
   /**
    * 音频 URL
    */
-  url: StringOrPath;
+  url: DynamicString;
   /**
-   * 音频描述/标题
+   * 音频描述（如标题或摘要）
    */
-  description?: StringOrPath;
+  description?: DynamicString;
 }
 
 // ============================================================================
-// 布局组件
+// Layout Components
 // ============================================================================
 
 /**
- * 子组件引用 - 静态列表或动态模板
+ * 主轴分布方式
  */
-export type ChildrenProperty =
-  | string[]
-  | {
-      componentId: string;
-      path: string;
-    };
+export type JustifyContent =
+  | 'start'
+  | 'center'
+  | 'end'
+  | 'spaceBetween'
+  | 'spaceAround'
+  | 'spaceEvenly'
+  | 'stretch';
 
 /**
- * Row 组件 - 水平布局
+ * 交叉轴对齐方式
  */
-export interface RowComponent {
+export type AlignItems = 'start' | 'center' | 'end' | 'stretch';
+
+/**
+ * Row 组件（水平布局）
+ * @see standard_catalog.json#/components/Row
+ */
+export interface RowComponent extends ComponentCommon, CatalogComponentCommon {
   component: 'Row';
   /**
-   * 子组件 ID 列表或动态模板
+   * 子组件列表
    */
-  children: ChildrenProperty;
+  children: ChildList;
   /**
-   * 主轴方向上的分布方式
+   * 主轴（水平）分布方式
    */
-  distribution?:
-    | 'start'
-    | 'center'
-    | 'end'
-    | 'spaceBetween'
-    | 'spaceAround'
-    | 'spaceEvenly'
-    | 'stretch';
+  justify?: JustifyContent;
   /**
-   * 交叉轴方向上的对齐方式
+   * 交叉轴（垂直）对齐方式
    */
-  alignment?: 'start' | 'center' | 'end' | 'stretch';
+  align?: AlignItems;
 }
 
 /**
- * Column 组件 - 垂直布局
+ * Column 组件（垂直布局）
+ * @see standard_catalog.json#/components/Column
  */
-export interface ColumnComponent {
+export interface ColumnComponent extends ComponentCommon, CatalogComponentCommon {
   component: 'Column';
   /**
-   * 子组件 ID 列表或动态模板
+   * 子组件列表
    */
-  children: ChildrenProperty;
+  children: ChildList;
   /**
-   * 主轴方向上的分布方式
+   * 主轴（垂直）分布方式
    */
-  distribution?:
-    | 'start'
-    | 'center'
-    | 'end'
-    | 'spaceBetween'
-    | 'spaceAround'
-    | 'spaceEvenly'
-    | 'stretch';
+  justify?: JustifyContent;
   /**
-   * 交叉轴方向上的对齐方式
+   * 交叉轴（水平）对齐方式
    */
-  alignment?: 'start' | 'center' | 'end' | 'stretch';
+  align?: AlignItems;
 }
 
 /**
- * List 组件 - 列表布局
+ * List 组件
+ * @see standard_catalog.json#/components/List
  */
-export interface ListComponent {
+export interface ListComponent extends ComponentCommon, CatalogComponentCommon {
   component: 'List';
   /**
-   * 子组件 ID 列表或动态模板
+   * 子组件列表
    */
-  children: ChildrenProperty;
+  children: ChildList;
   /**
    * 列表方向
    */
   direction?: 'vertical' | 'horizontal';
   /**
-   * 对齐方式
+   * 交叉轴对齐方式
    */
-  alignment?: 'start' | 'center' | 'end' | 'stretch';
+  align?: AlignItems;
 }
 
 /**
- * Card 组件 - 卡片容器
+ * Card 组件
+ * @see standard_catalog.json#/components/Card
  */
-export interface CardComponent {
+export interface CardComponent extends ComponentCommon, CatalogComponentCommon {
   component: 'Card';
   /**
-   * 单个子组件 ID
+   * 子组件 ID
    */
   child: string;
 }
 
 /**
- * Tabs 组件 - 标签页
+ * Tab 项目
+ * @see standard_catalog.json#/components/Tabs/tabs/items
  */
-export interface TabsComponent {
+export interface TabItem {
+  /**
+   * 标签页标题
+   */
+  title: DynamicString;
+  /**
+   * 标签页内容组件 ID
+   */
+  child: string;
+}
+
+/**
+ * Tabs 组件
+ * @see standard_catalog.json#/components/Tabs
+ */
+export interface TabsComponent extends ComponentCommon, CatalogComponentCommon {
   component: 'Tabs';
   /**
-   * 标签项列表
+   * 标签页列表
    */
-  tabItems: Array<{
-    title: StringOrPath;
-    child: string;
-  }>;
+  tabs: TabItem[];
 }
 
 /**
- * Divider 组件 - 分割线
+ * Modal 组件
+ * @see standard_catalog.json#/components/Modal
  */
-export interface DividerComponent {
-  component: 'Divider';
-  /**
-   * 方向
-   */
-  axis?: 'horizontal' | 'vertical';
-}
-
-/**
- * Modal 组件 - 模态框
- */
-export interface ModalComponent {
+export interface ModalComponent extends ComponentCommon, CatalogComponentCommon {
   component: 'Modal';
   /**
    * 触发模态框的组件 ID
    */
-  entryPointChild: string;
+  trigger: string;
   /**
    * 模态框内容组件 ID
    */
-  contentChild: string;
+  content: string;
+}
+
+/**
+ * Divider 组件
+ * @see standard_catalog.json#/components/Divider
+ */
+export interface DividerComponent extends ComponentCommon, CatalogComponentCommon {
+  component: 'Divider';
+  /**
+   * 分割线方向
+   * @default "horizontal"
+   */
+  axis?: 'horizontal' | 'vertical';
 }
 
 // ============================================================================
-// 交互组件
+// Interactive Components
 // ============================================================================
 
 /**
- * Button 组件 - 按钮
+ * Button 组件
+ * @see standard_catalog.json#/components/Button
  */
-export interface ButtonComponent {
+export interface ButtonComponent extends ComponentCommon, CatalogComponentCommon, Checkable {
   component: 'Button';
   /**
-   * 按钮内容组件 ID（通常是 Text）
+   * 按钮内容组件 ID
    */
   child: string;
   /**
-   * 是否为主按钮样式
-   */
-  primary?: boolean;
-  /**
-   * 点击时触发的操作
+   * 点击操作
    */
   action: Action;
+  /**
+   * 按钮样式变体
+   */
+  variant?: ButtonVariant;
 }
 
 /**
- * CheckBox 组件 - 复选框
+ * Button 组件变体
  */
-export interface CheckBoxComponent {
+export type ButtonVariant = 'primary' | 'borderless';
+
+/**
+ * CheckBox 组件
+ * @see standard_catalog.json#/components/CheckBox
+ */
+export interface CheckBoxComponent extends ComponentCommon, CatalogComponentCommon, Checkable {
   component: 'CheckBox';
   /**
-   * 标签文本
+   * 复选框标签
    */
-  label: StringOrPath;
+  label: DynamicString;
   /**
-   * 选中状态
+   * 复选框值
    */
-  value: BooleanOrPath;
+  value: DynamicBoolean;
 }
 
 /**
- * TextField 组件 - 文本输入框
+ * TextField 组件
+ * @see standard_catalog.json#/components/TextField
  */
-export interface TextFieldComponent {
+export interface TextFieldComponent extends ComponentCommon, CatalogComponentCommon, Checkable {
   component: 'TextField';
   /**
    * 输入框标签
    */
-  label: StringOrPath;
+  label: DynamicString;
   /**
    * 输入框值
    */
-  text?: StringOrPath;
+  value?: DynamicString;
   /**
-   * 输入类型提示
+   * 输入框类型变体
    */
-  usageHint?: 'longText' | 'number' | 'shortText' | 'obscured';
-  /**
-   * 验证正则表达式
-   */
-  validationRegexp?: string;
+  variant?: TextFieldVariant;
 }
 
 /**
- * DateTimeInput 组件 - 日期时间选择器
+ * TextField 组件变体
  */
-export interface DateTimeInputComponent {
+export type TextFieldVariant = 'longText' | 'number' | 'shortText' | 'obscured';
+
+/**
+ * DateTimeInput 组件
+ * @see standard_catalog.json#/components/DateTimeInput
+ */
+export interface DateTimeInputComponent extends ComponentCommon, CatalogComponentCommon, Checkable {
   component: 'DateTimeInput';
   /**
-   * 当前值（ISO 8601 格式）
+   * 日期/时间值（ISO 8601 格式）
    */
-  value: StringOrPath;
+  value: DynamicString;
   /**
    * 是否允许选择日期
    */
@@ -429,164 +499,136 @@ export interface DateTimeInputComponent {
    */
   enableTime?: boolean;
   /**
-   * 输出格式
+   * 最小允许日期/时间（ISO 8601 格式）
    */
-  outputFormat?: string;
+  min?: DynamicString;
   /**
-   * 标签
+   * 最大允许日期/时间（ISO 8601 格式）
    */
-  label?: StringOrPath;
+  max?: DynamicString;
+  /**
+   * 输入框标签
+   */
+  label?: DynamicString;
 }
 
 /**
- * ChoicePicker 组件 - 选择器
+ * 选项定义
+ * @see standard_catalog.json#/components/ChoicePicker/options/items
  */
-export interface ChoicePickerComponent {
+export interface ChoiceOption {
+  /**
+   * 选项显示文本
+   */
+  label: DynamicString;
+  /**
+   * 选项值
+   */
+  value: string;
+}
+
+/**
+ * ChoicePicker 组件
+ * @see standard_catalog.json#/components/ChoicePicker
+ */
+export interface ChoicePickerComponent extends ComponentCommon, CatalogComponentCommon, Checkable {
   component: 'ChoicePicker';
-  /**
-   * 标签
-   */
-  label?: StringOrPath;
-  /**
-   * 使用提示
-   */
-  usageHint: 'multipleSelection' | 'mutuallyExclusive';
   /**
    * 选项列表
    */
-  options: Array<{
-    label: StringOrPath;
-    value: string;
-  }>;
+  options: ChoiceOption[];
   /**
-   * 当前选中的值
+   * 当前选中值列表
    */
-  value: StringArrayOrPath;
+  value: DynamicStringList;
+  /**
+   * 选项组标签
+   */
+  label?: DynamicString;
+  /**
+   * 选择器类型变体
+   */
+  variant?: ChoicePickerVariant;
 }
 
 /**
- * Slider 组件 - 滑块
+ * ChoicePicker 组件变体
  */
-export interface SliderComponent {
+export type ChoicePickerVariant = 'multipleSelection' | 'mutuallyExclusive';
+
+/**
+ * Slider 组件
+ * @see standard_catalog.json#/components/Slider
+ */
+export interface SliderComponent extends ComponentCommon, CatalogComponentCommon, Checkable {
   component: 'Slider';
-  /**
-   * 标签
-   */
-  label?: StringOrPath;
-  /**
-   * 最小值
-   */
-  min?: number;
-  /**
-   * 最大值
-   */
-  max?: number;
   /**
    * 当前值
    */
-  value: NumberOrPath;
+  value: DynamicNumber;
+  /**
+   * 最小值（必需）
+   */
+  min: number;
+  /**
+   * 最大值（必需）
+   */
+  max: number;
+  /**
+   * 滑块标签
+   */
+  label?: DynamicString;
 }
 
 // ============================================================================
-// 数据可视化组件
+// Extension Components (非标准)
 // ============================================================================
 
 /**
- * Chart 图表类型
+ * Chart 组件（扩展，非 A2UI 标准）
+ * @extension
  */
-export type ChartType = 'line' | 'bar' | 'pie' | 'scatter' | 'area' | 'radar' | 'gauge';
-
-/**
- * Chart 数据系列
- */
-export interface ChartSeries {
-  /**
-   * 系列名称
-   */
-  name?: string;
-  /**
-   * 系列类型（可覆盖 chartType）
-   */
-  type?: ChartType;
-  /**
-   * 数据点数组
-   */
-  data: number[] | Array<{ name?: string; value: number }> | { path: string };
-}
-
-/**
- * Chart 坐标轴配置
- */
-export interface ChartAxisConfig {
-  /**
-   * 坐标轴类型
-   */
-  type?: 'category' | 'value' | 'time' | 'log';
-  /**
-   * 坐标轴数据（category 类型时使用）
-   */
-  data?: string[] | { path: string };
-  /**
-   * 坐标轴名称
-   */
-  name?: string;
-}
-
-/**
- * Chart 组件 - 图表可视化
- */
-export interface ChartComponent {
+export interface ChartComponent extends ComponentCommon, CatalogComponentCommon {
   component: 'Chart';
-  /**
-   * 图表类型
-   */
   chartType: ChartType;
-  /**
-   * 图表标题
-   */
-  title?: StringOrPath;
-  /**
-   * 数据系列
-   */
-  series: ChartSeries[] | { path: string };
-  /**
-   * X 轴配置
-   */
+  series: ChartSeries[] | DataBinding;
+  title?: DynamicString;
   xAxis?: ChartAxisConfig;
-  /**
-   * Y 轴配置
-   */
   yAxis?: ChartAxisConfig;
-  /**
-   * 是否显示图例
-   */
   legend?: boolean;
-  /**
-   * 是否显示 tooltip
-   */
   tooltip?: boolean;
-  /**
-   * 图表高度（像素）
-   */
   height?: number;
-  /**
-   * 图表宽度（像素或百分比字符串）
-   */
   width?: number | string;
-  /**
-   * ECharts 原生 option 扩展（高级用法）
-   */
-  echartsOption?: Record<string, unknown> | { path: string };
+  echartsOption?: Record<string, unknown> | DataBinding;
+}
+
+export type ChartType = 'line' | 'bar' | 'pie' | 'scatter' | 'area' | 'radar' | 'custom';
+
+export interface ChartSeries {
+  name?: string;
+  data: (number | [number, number] | Record<string, unknown>)[] | DataBinding;
+  type?: string;
+  color?: string;
+  [key: string]: unknown;
+}
+
+export interface ChartAxisConfig {
+  type?: 'category' | 'value' | 'time' | 'log';
+  data?: string[] | DataBinding;
+  name?: string;
+  min?: number | 'auto';
+  max?: number | 'auto';
+  [key: string]: unknown;
 }
 
 // ============================================================================
-// 组件类型联合
+// Union Types
 // ============================================================================
 
 /**
- * 任意标准组件类型
+ * 标准组件类型
  */
-export type AnyComponent =
+export type StandardComponent =
   | TextComponent
   | ImageComponent
   | IconComponent
@@ -597,15 +639,19 @@ export type AnyComponent =
   | ListComponent
   | CardComponent
   | TabsComponent
-  | DividerComponent
   | ModalComponent
+  | DividerComponent
   | ButtonComponent
   | CheckBoxComponent
   | TextFieldComponent
   | DateTimeInputComponent
   | ChoicePickerComponent
-  | SliderComponent
-  | ChartComponent;
+  | SliderComponent;
+
+/**
+ * 所有组件类型（包括扩展）
+ */
+export type AnyComponent = StandardComponent | ChartComponent;
 
 /**
  * 组件类型名称
@@ -613,9 +659,9 @@ export type AnyComponent =
 export type ComponentType = AnyComponent['component'];
 
 /**
- * 组件实例 - 带有 ID 和可选权重的组件
+ * 组件实例（松散类型，用于运行时）
  */
-export interface ComponentInstance extends ComponentCommon {
+export interface ComponentInstance extends Record<string, unknown> {
+  id: string;
   component: string;
-  [key: string]: unknown;
 }

@@ -1,6 +1,6 @@
 {
   "name": "@zhama/a2ui-core",
-  "version": "0.6.0",
+  "version": "0.9.0",
   "description": "A2UI Protocol Core Library - Framework-agnostic TypeScript types and builders for A2UI protocol",
   "type": "module",
   "main": "dist/index.cjs",

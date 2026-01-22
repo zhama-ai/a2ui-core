@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  isPathBinding,
+  isDataBinding,
   getLiteralValue,
   getPathValue,
   path,
@@ -13,25 +13,25 @@ import {
 } from '../src/utils/index';
 
 describe('Utils', () => {
-  describe('isPathBinding', () => {
+  describe('isDataBinding', () => {
     it('should return true for path objects', () => {
-      expect(isPathBinding({ path: '/user/name' })).toBe(true);
+      expect(isDataBinding({ path: '/user/name' })).toBe(true);
     });
 
     it('should return false for string literals', () => {
-      expect(isPathBinding('hello')).toBe(false);
+      expect(isDataBinding('hello')).toBe(false);
     });
 
     it('should return false for number literals', () => {
-      expect(isPathBinding(42)).toBe(false);
+      expect(isDataBinding(42)).toBe(false);
     });
 
     it('should return false for boolean literals', () => {
-      expect(isPathBinding(true)).toBe(false);
+      expect(isDataBinding(true)).toBe(false);
     });
 
     it('should return false for null', () => {
-      expect(isPathBinding(null as unknown as string)).toBe(false);
+      expect(isDataBinding(null as unknown as string)).toBe(false);
     });
   });
 
@@ -125,4 +125,3 @@ describe('Utils', () => {
     });
   });
 });
-

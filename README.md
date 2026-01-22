@@ -30,7 +30,7 @@ import {
   // Builders
   text, column, button, h1,
   createSurface, updateComponents, updateDataModel,
-  createV09Messages,
+  createMessages,
   
   // Surface
   SURFACE_IDS, createA2UISurface,
@@ -43,7 +43,7 @@ import {
   
   // Types
   type ComponentInstance,
-  type ServerToClientMessageV09,
+  type ServerToClientMessage,
 } from '@zhama/a2ui-core';
 
 // Create components
@@ -52,7 +52,7 @@ const greeting = text({ path: '/user/name' }, { id: 'greeting' });
 const root = column(['title', 'greeting'], { id: 'root' });
 
 // Create messages
-const messages = createV09Messages({
+const messages = createMessages({
   surfaceId: SURFACE_IDS.CHAT,
   components: [title, greeting, root],
   dataModel: { user: { name: 'John' } },
@@ -69,10 +69,10 @@ You can import specific modules for tree-shaking:
 
 ```typescript
 // Types only
-import type { ComponentInstance, ServerToClientMessageV09 } from '@zhama/a2ui-core/types';
+import type { ComponentInstance, ServerToClientMessage } from '@zhama/a2ui-core/types';
 
 // Builders only
-import { text, column, createV09Messages } from '@zhama/a2ui-core/builders';
+import { text, column, createMessages } from '@zhama/a2ui-core/builders';
 
 // Validators only
 import { validateMessage, validateMessages } from '@zhama/a2ui-core/validators';
@@ -103,7 +103,7 @@ list(children: ChildrenProperty, options?: ListOptions): ComponentInstance
 card(childId: string, options?: CardOptions): ComponentInstance
 tabs(items: TabItem[], options?: TabsOptions): ComponentInstance
 divider(options?: DividerOptions): ComponentInstance
-modal(entryPointChildId: string, contentChildId: string, options?: ModalOptions): ComponentInstance
+modal(triggerId: string, contentId: string, options?: ModalOptions): ComponentInstance
 
 // Interactive components
 button(childId: string, action: Action, options?: ButtonOptions): ComponentInstance
@@ -131,11 +131,11 @@ createSurface(surfaceId: string, catalogId?: string): CreateSurfaceMessage
 updateComponents(surfaceId: string, components: ComponentInstance[]): UpdateComponentsMessage
 updateDataModel(surfaceId: string, value: unknown, path?: string, op?: 'add' | 'replace' | 'remove'): UpdateDataModelMessage
 deleteSurface(surfaceId: string): DeleteSurfaceMessage
-createV09Messages(options): ServerToClientMessageV09[]
+createMessages(options): ServerToClientMessage[]
 
 // Utilities
-messagesToJsonl(messages: ServerToClientMessageV09[]): string
-jsonlToMessages(jsonl: string): ServerToClientMessageV09[]
+messagesToJsonl(messages: ServerToClientMessage[]): string
+jsonlToMessages(jsonl: string): ServerToClientMessage[]
 ```
 
 ### Surface Module
@@ -154,7 +154,7 @@ SURFACE_IDS.NOTIFICATION   // '@notification' - Notifications
 // Surface creation functions
 createA2UISurface(rootId: string, components: ComponentInstance[], surfaceId?: string): SurfaceResult
 createA2UISurfaceWithData(rootId: string, components: ComponentInstance[], dataModel: DataObject, surfaceId?: string): SurfaceResult
-createDeleteSurfaceMessage(surfaceId: string): ServerToClientMessageV09
+createDeleteSurfaceMessage(surfaceId: string): ServerToClientMessage
 
 // Convenience functions
 createChatSurface(rootId: string, components: ComponentInstance[]): SurfaceResult
@@ -178,7 +178,7 @@ normalizePath(path: string, pathMappings?: PathMappings): string
 ```typescript
 validateMessage(message: ServerToClientMessage, options?: ValidationOptions): ValidationResult
 validateMessages(messages: ServerToClientMessage[], options?: ValidationOptions): ValidationResult
-validateV09Message(message: ServerToClientMessageV09, options?: ValidationOptions): ValidationResult
+validateMessage(message: ServerToClientMessage, options?: ValidationOptions): ValidationResult
 ```
 
 ### Utils

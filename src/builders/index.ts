@@ -1,27 +1,14 @@
 /**
- * A2UI Builders Module
- *
- * 提供便捷的函数来构建 A2UI v0.9 协议消息和组件
- *
- * 注意：v0.9 虽然官方标记为 Draft，但格式更简洁现代。
- * 本库统一使用 v0.9 格式。
- *
- * 参考: https://a2ui.org/
+ * A2UI Builders - v0.9
  */
 
-// ============================================================================
 // ID Generator
-// ============================================================================
-
 export { generateId, resetIdCounter, getIdCounter } from './id-generator';
 
-// ============================================================================
-// Component Builder (v0.9 格式)
-// ============================================================================
-
+// Component Builder
 export {
-  // 类型
   type ComponentOptions,
+  type CheckableOptions,
   type TextOptions,
   type ImageOptions,
   type IconOptions,
@@ -30,8 +17,8 @@ export {
   type LayoutOptions,
   type ListOptions,
   type CardOptions,
+  type TabInput,
   type TabsOptions,
-  type TabItem,
   type DividerOptions,
   type ModalOptions,
   type ButtonOptions,
@@ -41,13 +28,12 @@ export {
   type ChoicePickerOptions,
   type SliderOptions,
   type ChartOptions,
-  // 内容组件
+  eventAction,
   text,
   image,
   icon,
   video,
   audioPlayer,
-  // 布局组件
   row,
   column,
   list,
@@ -55,19 +41,16 @@ export {
   tabs,
   divider,
   modal,
-  // 交互组件
   button,
   checkbox,
   textField,
   dateTimeInput,
   choicePicker,
   slider,
-  // 数据可视化组件
   chart,
   lineChart,
   barChart,
   pieChart,
-  // 便捷组件
   textButton,
   h1,
   h2,
@@ -78,37 +61,22 @@ export {
   body,
 } from './component-builder';
 
-// ============================================================================
-// Message Builder (v0.9 格式)
-// ============================================================================
-
+// Message Builder
 export {
-  // v0.9 消息构建
+  type CreateSurfaceOptions,
   createSurface,
   updateComponents,
   updateDataModel,
   deleteSurface,
-  createV09Messages,
-  // 工具
+  createMessages,
   messagesToJsonl,
   jsonlToMessages,
 } from './message-builder';
 
-// ============================================================================
 // Data Model Builder
-// ============================================================================
-
 export {
-  // 类型
   type PathMappings,
   type UpdateDataItem,
-  // 常量
   DEFAULT_PATH_MAPPINGS,
-  // 转换函数
-  objectToValueMap,
-  valueToValueMap,
   normalizePath,
-  updatesToValueMap,
-  flattenObjectToValueMap,
-  valueMapToObject,
 } from './data-model-builder';

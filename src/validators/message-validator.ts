@@ -1,60 +1,34 @@
 /**
  * Message Validator - v0.9
  *
- * 提供 A2UI v0.9 消息验证功能
+ * A2UI v0.9 消息验证
  */
 
-import type { ServerToClientMessageV09, ComponentInstance } from '../types';
+import type { ServerToClientMessage, ComponentInstance } from '../types';
 
-/**
- * 验证结果
- */
 export interface ValidationResult {
-  /** 是否有效 */
   valid: boolean;
-  /** 错误信息列表 */
   errors: ValidationError[];
-  /** 警告信息列表 */
   warnings: ValidationWarning[];
 }
 
-/**
- * 验证错误
- */
 export interface ValidationError {
-  /** 错误代码 */
   code: string;
-  /** 错误消息 */
   message: string;
-  /** 错误路径（如 'components[0].id'） */
   path?: string;
 }
 
-/**
- * 验证警告
- */
 export interface ValidationWarning {
-  /** 警告代码 */
   code: string;
-  /** 警告消息 */
   message: string;
-  /** 警告路径 */
   path?: string;
 }
 
-/**
- * 验证选项
- */
 export interface ValidationOptions {
-  /** 是否严格模式（报告更多问题） */
   strict?: boolean;
-  /** 允许的组件类型（为空表示允许所有） */
   allowedComponents?: string[];
 }
 
-/**
- * 标准组件类型列表
- */
 const STANDARD_COMPONENT_TYPES = [
   'Text',
   'Image',
@@ -76,11 +50,8 @@ const STANDARD_COMPONENT_TYPES = [
   'Slider',
 ];
 
-/**
- * 验证 v0.9 消息
- */
-export function validateV09Message(
-  message: ServerToClientMessageV09,
+export function validateMessage(
+  message: ServerToClientMessage,
   options: ValidationOptions = {}
 ): ValidationResult {
   const errors: ValidationError[] = [];
@@ -102,6 +73,16 @@ export function validateV09Message(
         path: 'createSurface.catalogId',
       });
     }
+    if (createSurface.theme?.primaryColor) {
+      const colorPattern = /^#[0-9a-fA-F]{6}$/;
+      if (!colorPattern.test(createSurface.theme.primaryColor)) {
+        warnings.push({
+          code: 'INVALID_PRIMARY_COLOR',
+          message: 'primaryColor should be a hex color code (e.g., #00BFFF)',
+          path: 'createSurface.theme.primaryColor',
+        });
+      }
+    }
   } else if ('updateComponents' in message) {
     const { updateComponents } = message;
     if (!updateComponents.surfaceId) {
@@ -118,7 +99,6 @@ export function validateV09Message(
         path: 'updateComponents.components',
       });
     } else {
-      // 验证组件
       validateComponents(updateComponents.components, errors, warnings, options);
     }
   } else if ('updateDataModel' in message) {
@@ -129,33 +109,6 @@ export function validateV09Message(
         message: 'updateDataModel.surfaceId is required',
         path: 'updateDataModel.surfaceId',
       });
-    }
-    // 验证 op 操作类型
-    if (updateDataModel.op && !['add', 'replace', 'remove'].includes(updateDataModel.op)) {
-      errors.push({
-        code: 'INVALID_OP',
-        message: 'updateDataModel.op must be one of: add, replace, remove',
-        path: 'updateDataModel.op',
-      });
-    }
-    // 验证 remove 操作不需要 value
-    if (updateDataModel.op === 'remove' && updateDataModel.value !== undefined) {
-      warnings.push({
-        code: 'UNNECESSARY_VALUE',
-        message: 'updateDataModel.value should not be provided for remove operation',
-        path: 'updateDataModel.value',
-      });
-    }
-    // 验证 add/replace 操作需要 value
-    if (updateDataModel.op !== 'remove' && updateDataModel.value === undefined) {
-      // 默认为 replace，需要 value
-      if (updateDataModel.op === 'add') {
-        errors.push({
-          code: 'MISSING_VALUE',
-          message: 'updateDataModel.value is required for add operation',
-          path: 'updateDataModel.value',
-        });
-      }
     }
   } else if ('deleteSurface' in message) {
     const { deleteSurface } = message;
@@ -174,28 +127,11 @@ export function validateV09Message(
     });
   }
 
-  return {
-    valid: errors.length === 0,
-    errors,
-    warnings,
-  };
+  return { valid: errors.length === 0, errors, warnings };
 }
 
-/**
- * 验证消息（v0.9）
- */
-export function validateMessage(
-  message: ServerToClientMessageV09,
-  options: ValidationOptions = {}
-): ValidationResult {
-  return validateV09Message(message, options);
-}
-
-/**
- * 验证消息数组
- */
 export function validateMessages(
-  messages: ServerToClientMessageV09[],
+  messages: ServerToClientMessage[],
   options: ValidationOptions = {}
 ): ValidationResult {
   const errors: ValidationError[] = [];
@@ -207,29 +143,15 @@ export function validateMessages(
 
     const result = validateMessage(message, options);
     for (const error of result.errors) {
-      errors.push({
-        ...error,
-        path: `messages[${i}].${error.path ?? ''}`,
-      });
+      errors.push({ ...error, path: `messages[${i}].${error.path ?? ''}` });
     }
     for (const warning of result.warnings) {
-      warnings.push({
-        ...warning,
-        path: `messages[${i}].${warning.path ?? ''}`,
-      });
+      warnings.push({ ...warning, path: `messages[${i}].${warning.path ?? ''}` });
     }
   }
 
-  return {
-    valid: errors.length === 0,
-    errors,
-    warnings,
-  };
+  return { valid: errors.length === 0, errors, warnings };
 }
-
-// ============================================================================
-// 内部辅助函数
-// ============================================================================
 
 function validateComponents(
   components: ComponentInstance[],
@@ -246,7 +168,6 @@ function validateComponents(
 
     const path = `updateComponents.components[${i}]`;
 
-    // 验证 ID
     if (!comp.id) {
       errors.push({
         code: 'MISSING_COMPONENT_ID',
@@ -262,13 +183,9 @@ function validateComponents(
         });
       }
       componentIds.add(comp.id);
-
-      if (comp.id === 'root') {
-        hasRoot = true;
-      }
+      if (comp.id === 'root') hasRoot = true;
     }
 
-    // 验证组件类型
     if (!comp.component) {
       errors.push({
         code: 'MISSING_COMPONENT_TYPE',
@@ -276,9 +193,8 @@ function validateComponents(
         path: `${path}.component`,
       });
     } else {
-      // 检查是否为标准组件类型
       if (options.strict && !STANDARD_COMPONENT_TYPES.includes(comp.component)) {
-        if (options.allowedComponents && !options.allowedComponents.includes(comp.component)) {
+        if (!options.allowedComponents?.includes(comp.component)) {
           warnings.push({
             code: 'UNKNOWN_COMPONENT_TYPE',
             message: `Unknown component type: ${comp.component}`,
@@ -286,15 +202,188 @@ function validateComponents(
           });
         }
       }
+
+      validateComponentProperties(comp, path, errors);
     }
   }
 
-  // 检查是否有 root 组件
   if (!hasRoot && options.strict) {
     warnings.push({
       code: 'MISSING_ROOT_COMPONENT',
       message: 'No component with id "root" found',
       path: 'updateComponents.components',
     });
+  }
+}
+
+function validateComponentProperties(
+  comp: ComponentInstance,
+  path: string,
+  errors: ValidationError[]
+): void {
+  switch (comp.component) {
+    case 'Text':
+      if (comp.text === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'Text component requires "text" property',
+          path: `${path}.text`,
+        });
+      }
+      break;
+    case 'Image':
+    case 'Video':
+    case 'AudioPlayer':
+      if (comp.url === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: `${comp.component} component requires "url" property`,
+          path: `${path}.url`,
+        });
+      }
+      break;
+    case 'Icon':
+      if (comp.name === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'Icon component requires "name" property',
+          path: `${path}.name`,
+        });
+      }
+      break;
+    case 'Row':
+    case 'Column':
+    case 'List':
+      if (comp.children === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: `${comp.component} component requires "children" property`,
+          path: `${path}.children`,
+        });
+      }
+      break;
+    case 'Card':
+      if (comp.child === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'Card component requires "child" property',
+          path: `${path}.child`,
+        });
+      }
+      break;
+    case 'Tabs':
+      if (comp.tabs === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'Tabs component requires "tabs" property',
+          path: `${path}.tabs`,
+        });
+      }
+      break;
+    case 'Modal':
+      if (comp.trigger === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'Modal component requires "trigger" property',
+          path: `${path}.trigger`,
+        });
+      }
+      if (comp.content === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'Modal component requires "content" property',
+          path: `${path}.content`,
+        });
+      }
+      break;
+    case 'Button':
+      if (comp.child === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'Button component requires "child" property',
+          path: `${path}.child`,
+        });
+      }
+      if (comp.action === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'Button component requires "action" property',
+          path: `${path}.action`,
+        });
+      }
+      break;
+    case 'CheckBox':
+      if (comp.label === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'CheckBox component requires "label" property',
+          path: `${path}.label`,
+        });
+      }
+      if (comp.value === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'CheckBox component requires "value" property',
+          path: `${path}.value`,
+        });
+      }
+      break;
+    case 'TextField':
+      if (comp.label === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'TextField component requires "label" property',
+          path: `${path}.label`,
+        });
+      }
+      break;
+    case 'DateTimeInput':
+      if (comp.value === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'DateTimeInput component requires "value" property',
+          path: `${path}.value`,
+        });
+      }
+      break;
+    case 'ChoicePicker':
+      if (comp.options === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'ChoicePicker component requires "options" property',
+          path: `${path}.options`,
+        });
+      }
+      if (comp.value === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'ChoicePicker component requires "value" property',
+          path: `${path}.value`,
+        });
+      }
+      break;
+    case 'Slider':
+      if (comp.value === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'Slider component requires "value" property',
+          path: `${path}.value`,
+        });
+      }
+      if (comp.min === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'Slider component requires "min" property',
+          path: `${path}.min`,
+        });
+      }
+      if (comp.max === undefined) {
+        errors.push({
+          code: 'MISSING_REQUIRED_PROPERTY',
+          message: 'Slider component requires "max" property',
+          path: `${path}.max`,
+        });
+      }
+      break;
   }
 }

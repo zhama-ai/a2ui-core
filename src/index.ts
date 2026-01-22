@@ -2,99 +2,88 @@
  * @zhama/a2ui-core
  *
  * A2UI Protocol Core Library - v0.9
- * Framework-agnostic TypeScript types and builders for A2UI protocol
+ * 严格按照 A2UI v0.9 官方规范
  *
- * @example
- * ```typescript
- * import {
- *   // Types
- *   type ComponentInstance,
- *   type ServerToClientMessage,
- *
- *   // Builders
- *   text, column, button, card,
- *   createSurface, updateComponents, updateDataModel,
- *   createV09Messages,
- *
- *   // Validators
- *   validateMessage,
- *
- *   // Utils
- *   path, generateId,
- * } from '@zhama/a2ui-core';
- *
- * // 创建组件
- * const title = text('Hello World', { id: 'title', usageHint: 'h1' });
- * const greeting = text({ path: '/user/name' }, { id: 'greeting' });
- * const root = column(['title', 'greeting'], { id: 'root' });
- *
- * // 创建消息
- * const messages = createV09Messages({
- *   surfaceId: 'my-surface',
- *   components: [title, greeting, root],
- *   dataModel: { user: { name: 'John' } },
- * });
- *
- * // 验证消息
- * const result = validateMessage(messages[0]);
- * console.log(result.valid); // true
- * ```
+ * @see https://a2ui.org/
  */
 
 // ============================================================================
-// Types - 类型定义 (v0.9 only)
+// Types
 // ============================================================================
 
 export type {
   // Primitives
-  StringOrPath,
-  NumberOrPath,
-  BooleanOrPath,
-  StringArrayOrPath,
+  DataBinding,
+  FunctionCall,
+  FunctionReturnType,
+  LogicExpression,
+  DynamicString,
+  DynamicNumber,
+  DynamicBoolean,
+  DynamicStringList,
+  DynamicValue,
+  CheckRule,
+  Checkable,
+  AccessibilityAttributes,
+  AccessibilityRole,
+  LiveRegion,
   ContextValue,
-  // Components
+  // Action
   Action,
+  ActionEvent,
+  // Components
   ComponentCommon,
+  CatalogComponentCommon,
+  ChildList,
   TextComponent,
+  TextVariant,
   ImageComponent,
+  ImageVariant,
   IconComponent,
+  CustomIconPath,
+  StandardIconName,
   VideoComponent,
   AudioPlayerComponent,
-  StandardIconName,
-  ChildrenProperty,
   RowComponent,
   ColumnComponent,
   ListComponent,
   CardComponent,
   TabsComponent,
+  TabItem,
   DividerComponent,
   ModalComponent,
+  JustifyContent,
+  AlignItems,
   ButtonComponent,
+  ButtonVariant,
   CheckBoxComponent,
   TextFieldComponent,
+  TextFieldVariant,
   DateTimeInputComponent,
   ChoicePickerComponent,
+  ChoicePickerVariant,
+  ChoiceOption,
   SliderComponent,
-  // Data visualization components
+  // Extension
   ChartComponent,
   ChartType,
   ChartSeries,
   ChartAxisConfig,
+  // Union types
+  StandardComponent,
   AnyComponent,
   ComponentType,
   ComponentInstance,
   // Theme
   Theme,
-  // Messages v0.9
+  // Messages
   CreateSurfaceMessage,
   UpdateComponentsMessage,
   UpdateDataModelMessage,
   DeleteSurfaceMessage,
-  ServerToClientMessageV09,
-  // Client Messages
-  UserActionEvent,
-  DataChangeEvent,
-  ClientErrorMessage,
+  ServerToClientMessage,
+  ActionMessage,
+  ClientError,
   ValidationFailedError,
   GenericError,
   ClientToServerMessage,
@@ -102,15 +91,25 @@ export type {
   DataValue,
   DataObject,
   DataArray,
+  // v0.9 Client types
+  FunctionDefinition,
+  Catalog,
+  ClientCapabilities,
+  ClientDataModel,
 } from './types';
 
-// ServerToClientMessage 别名（纯 v0.9）
-export type { ServerToClientMessageV09 as ServerToClientMessage } from './types';
-
-export { isV09Message, STANDARD_CATALOG_ID, A2UI_EXTENSION_URI, A2UI_MIME_TYPE } from './types';
+export {
+  STANDARD_CATALOG_ID,
+  isCreateSurfaceMessage,
+  isUpdateComponentsMessage,
+  isUpdateDataModelMessage,
+  isDeleteSurfaceMessage,
+  isActionMessage,
+  isErrorMessage,
+} from './types';
 
 // ============================================================================
-// Builders - 构建器
+// Builders
 // ============================================================================
 
 export {
@@ -118,9 +117,9 @@ export {
   generateId,
   resetIdCounter,
   getIdCounter,
-  // ========== Component Builder (v0.9) ==========
-  // Component Builder Types
+  // Types
   type ComponentOptions,
+  type CheckableOptions,
   type TextOptions,
   type ImageOptions,
   type IconOptions,
@@ -129,8 +128,8 @@ export {
   type LayoutOptions,
   type ListOptions,
   type CardOptions,
+  type TabInput,
   type TabsOptions,
-  type TabItem,
   type DividerOptions,
   type ModalOptions,
   type ButtonOptions,
@@ -140,6 +139,9 @@ export {
   type ChoicePickerOptions,
   type SliderOptions,
   type ChartOptions,
+  type CreateSurfaceOptions,
+  // Action
+  eventAction,
   // Content Components
   text,
   image,
@@ -161,12 +163,12 @@ export {
   dateTimeInput,
   choicePicker,
   slider,
-  // Data Visualization Components
+  // Extension Components
   chart,
   lineChart,
   barChart,
   pieChart,
-  // Convenience Components
+  // Convenience
   textButton,
   h1,
   h2,
@@ -175,67 +177,55 @@ export {
   h5,
   caption,
   body,
-  // ========== Message Builders (v0.9) ==========
+  // Messages
   createSurface,
   updateComponents,
   updateDataModel,
   deleteSurface,
-  createV09Messages,
-  // Message Tools
+  createMessages,
   messagesToJsonl,
   jsonlToMessages,
-  // ========== Data Model Builder ==========
-  // Data Model Builder Types
+  // Data Model
   type PathMappings,
   type UpdateDataItem,
-  // Data Model Builder
   DEFAULT_PATH_MAPPINGS,
-  objectToValueMap,
-  valueToValueMap,
   normalizePath,
-  updatesToValueMap,
-  flattenObjectToValueMap,
-  valueMapToObject,
 } from './builders';
 
 // ============================================================================
-// Validators - 验证器
+// Validators
 // ============================================================================
 
 export {
-  // 基础验证
   type ValidationResult,
   type ValidationError,
   type ValidationWarning,
   type ValidationOptions,
-  validateV09Message,
   validateMessage,
   validateMessages,
 } from './validators';
 
 // ============================================================================
-// Utils - 工具函数
+// Utils
 // ============================================================================
 
-export { isPathBinding, getLiteralValue, getPathValue, path, deepMerge, uuid } from './utils';
+export { isDataBinding, getLiteralValue, getPathValue, path, deepMerge, uuid } from './utils';
 
 // ============================================================================
-// Surface - Surface 构建工具 (v0.9 格式)
+// Surface
 // ============================================================================
 
 export {
-  // Surface IDs
   SURFACE_IDS,
   type SurfaceIdType,
   type SurfaceConfig,
   generateSurfaceId,
   resetSurfaceIdCounter,
-  // Surface Builder
   type SurfaceResult,
+  type SurfaceOptions,
   createA2UISurface,
   createA2UISurfaceWithData,
   createDeleteSurfaceMessage,
-  // Surface 便捷函数
   createChatSurface,
   createRecommendationSurface,
   createInputFormSurface,

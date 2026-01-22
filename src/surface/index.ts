@@ -17,6 +17,7 @@ export {
 
 export {
   type SurfaceResult,
+  type SurfaceOptions,
   createA2UISurface,
   createA2UISurfaceWithData,
   createDeleteSurfaceMessage,

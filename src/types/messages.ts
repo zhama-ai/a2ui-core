@@ -1,40 +1,52 @@
 /**
  * A2UI Message Types
  *
- * 服务器到客户端的消息类型定义
- * Based on A2UI v0.9 specification
+ * 服务器到客户端和客户端到服务器的消息类型，严格按照 A2UI v0.9 官方规范
+ * @see https://a2ui.dev/specification/v0_9/server_to_client.json
+ * @see https://a2ui.dev/specification/v0_9/client_to_server.json
  */
 
 import type { ComponentInstance } from './components';
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+/**
+ * A2UI 标准 Catalog ID
+ */
+export const STANDARD_CATALOG_ID = 'https://a2ui.dev/specification/v0_9/standard_catalog.json';
 
 // ============================================================================
 // Theme
 // ============================================================================
 
 /**
- * A2UI 主题配置
+ * 主题配置
+ * @see standard_catalog.json#/theme
  */
 export interface Theme {
   /**
-   * 主要字体
-   */
-  font?: string;
-  /**
-   * 主题色（十六进制格式，如 '#00BFFF'）
+   * 主要品牌颜色（十六进制代码，如 '#00BFFF'）
    */
   primaryColor?: string;
   /**
-   * 其他自定义样式
+   * 代理或工具的图标 URL
    */
-  [key: string]: string | undefined;
+  iconUrl?: string;
+  /**
+   * 代理或工具的显示名称
+   */
+  agentDisplayName?: string;
 }
 
 // ============================================================================
-// v0.9 消息格式
+// Server to Client Messages
 // ============================================================================
 
 /**
- * CreateSurface 消息 - 创建新的 UI Surface
+ * CreateSurface 消息
+ * @see server_to_client.json#/$defs/CreateSurfaceMessage
  */
 export interface CreateSurfaceMessage {
   createSurface: {
@@ -44,14 +56,23 @@ export interface CreateSurfaceMessage {
     surfaceId: string;
     /**
      * 组件目录 ID
-     * @example "https://a2ui.dev/specification/0.9/standard_catalog_definition.json"
      */
     catalogId: string;
+    /**
+     * Surface 的初始主题参数
+     */
+    theme?: Theme;
+    /**
+     * 如果为 true，客户端将在每条消息中发送完整数据模型
+     * @default false
+     */
+    sendDataModel?: boolean;
   };
 }
 
 /**
- * UpdateComponents 消息 - 更新 Surface 中的组件
+ * UpdateComponents 消息
+ * @see server_to_client.json#/$defs/UpdateComponentsMessage
  */
 export interface UpdateComponentsMessage {
   updateComponents: {
@@ -60,14 +81,15 @@ export interface UpdateComponentsMessage {
      */
     surfaceId: string;
     /**
-     * 组件列表（扁平化，通过 ID 引用建立关系）
+     * 组件列表（其中一个必须 id 为 'root'）
      */
     components: ComponentInstance[];
   };
 }
 
 /**
- * UpdateDataModel 消息 - 更新数据模型
+ * UpdateDataModel 消息
+ * @see server_to_client.json#/$defs/UpdateDataModelMessage
  */
 export interface UpdateDataModelMessage {
   updateDataModel: {
@@ -76,23 +98,19 @@ export interface UpdateDataModelMessage {
      */
     surfaceId: string;
     /**
-     * 数据路径（可选，默认为根路径）
-     * @example "/user/name"
+     * 数据路径（可选，省略表示根路径 '/'）
      */
     path?: string;
     /**
-     * 操作类型
-     */
-    op?: 'add' | 'replace' | 'remove';
-    /**
-     * 数据值（add/replace 操作需要）
+     * 数据值（省略则删除路径处的键）
      */
     value?: unknown;
   };
 }
 
 /**
- * DeleteSurface 消息 - 删除 Surface
+ * DeleteSurface 消息
+ * @see server_to_client.json#/$defs/DeleteSurfaceMessage
  */
 export interface DeleteSurfaceMessage {
   deleteSurface: {
@@ -104,133 +122,25 @@ export interface DeleteSurfaceMessage {
 }
 
 /**
- * v0.9 服务器到客户端消息
+ * 服务器到客户端消息
  */
-export type ServerToClientMessageV09 =
+export type ServerToClientMessage =
   | CreateSurfaceMessage
   | UpdateComponentsMessage
   | UpdateDataModelMessage
   | DeleteSurfaceMessage;
 
 // ============================================================================
-// v0.8 消息格式（兼容性）
-// ============================================================================
-
-/**
- * BeginRendering 消息 (v0.8) - 开始渲染
- */
-export interface BeginRenderingMessage {
-  beginRendering: {
-    /**
-     * Surface ID
-     */
-    surfaceId: string;
-    /**
-     * 根组件 ID
-     */
-    root: string;
-    /**
-     * 样式配置
-     */
-    styles?: Theme;
-  };
-}
-
-/**
- * SurfaceUpdate 消息 (v0.8) - 更新组件
- */
-export interface SurfaceUpdateMessage {
-  surfaceUpdate: {
-    surfaceId: string;
-    components: ComponentInstanceV08[];
-  };
-}
-
-/**
- * v0.8 组件实例格式
- */
-export interface ComponentInstanceV08 {
-  id: string;
-  weight?: number;
-  component: Record<string, unknown>;
-}
-
-/**
- * DataModelUpdate 消息 (v0.8) - 更新数据模型
- */
-export interface DataModelUpdateMessage {
-  dataModelUpdate: {
-    surfaceId: string;
-    path?: string;
-    contents: ValueMap[];
-  };
-}
-
-/**
- * DeleteSurface 消息 (v0.8)
- */
-export interface DeleteSurfaceMessageV08 {
-  deleteSurface: {
-    surfaceId: string;
-  };
-}
-
-/**
- * v0.8 ValueMap 格式
- */
-export interface ValueMap {
-  key: string;
-  valueString?: string;
-  valueNumber?: number;
-  valueBoolean?: boolean;
-  valueMap?: ValueMap[];
-}
-
-/**
- * v0.8 服务器到客户端消息
- */
-export type ServerToClientMessageV08 =
-  | BeginRenderingMessage
-  | SurfaceUpdateMessage
-  | DataModelUpdateMessage
-  | DeleteSurfaceMessageV08;
-
-// ============================================================================
-// 通用消息类型
-// ============================================================================
-
-/**
- * 服务器到客户端消息（支持 v0.8 和 v0.9）
- */
-export type ServerToClientMessage = ServerToClientMessageV08 | ServerToClientMessageV09;
-
-/**
- * 判断是否为 v0.9 消息
- */
-export function isV09Message(message: ServerToClientMessage): message is ServerToClientMessageV09 {
-  return (
-    'createSurface' in message || 'updateComponents' in message || 'updateDataModel' in message
-  );
-}
-
-/**
- * 判断是否为 v0.8 消息
- */
-export function isV08Message(message: ServerToClientMessage): message is ServerToClientMessageV08 {
-  return 'beginRendering' in message || 'surfaceUpdate' in message || 'dataModelUpdate' in message;
-}
-
-// ============================================================================
-// 客户端到服务器消息 (v0.9)
+// Client to Server Messages
 // ============================================================================
 
 /**
  * 用户操作事件
- * @see https://a2ui.dev/specification/0.9/client_to_server.json
+ * @see client_to_server.json#/properties/action
  */
-export interface UserActionEvent {
+export interface ActionMessage {
   /**
-   * 操作名称（来自组件的 action.name）
+   * 操作名称
    */
   name: string;
   /**
@@ -252,124 +162,164 @@ export interface UserActionEvent {
 }
 
 /**
- * 数据变更事件
- */
-export interface DataChangeEvent {
-  /**
-   * Surface ID
-   */
-  surfaceId: string;
-  /**
-   * 数据路径
-   */
-  path: string;
-  /**
-   * 新值
-   */
-  value: unknown;
-  /**
-   * 触发组件的 ID
-   */
-  sourceComponentId: string;
-}
-
-/**
  * 验证失败错误
- * @see https://a2ui.dev/specification/0.9/client_to_server.json
+ * @see client_to_server.json#/properties/error (VALIDATION_FAILED)
  */
 export interface ValidationFailedError {
-  /**
-   * 错误代码
-   */
   code: 'VALIDATION_FAILED';
-  /**
-   * 发生错误的 Surface ID
-   */
   surfaceId: string;
-  /**
-   * 验证失败的字段路径（JSON Pointer 格式）
-   * @example "/components/0/text"
-   */
   path: string;
-  /**
-   * 错误描述
-   */
   message: string;
 }
 
 /**
  * 通用错误
+ * @see client_to_server.json#/properties/error (Generic)
  */
 export interface GenericError {
-  /**
-   * 错误代码（非 VALIDATION_FAILED）
-   */
   code: string;
-  /**
-   * 发生错误的 Surface ID
-   */
   surfaceId: string;
-  /**
-   * 错误描述
-   */
   message: string;
-  /**
-   * 其他附加信息
-   */
   [key: string]: unknown;
 }
 
 /**
- * 客户端错误消息
+ * 客户端错误
  */
-export type ClientErrorMessage = ValidationFailedError | GenericError;
+export type ClientError = ValidationFailedError | GenericError;
 
 /**
  * 客户端到服务器消息
+ * @see client_to_server.json
  */
-export type ClientToServerMessage =
-  | { userAction: UserActionEvent }
-  | { dataChange: DataChangeEvent }
-  | { error: ClientErrorMessage };
+export type ClientToServerMessage = { action: ActionMessage } | { error: ClientError };
 
 // ============================================================================
-// 数据类型
+// Data Types
 // ============================================================================
 
-/**
- * 数据模型值类型
- */
 export type DataValue = string | number | boolean | null | DataObject | DataArray;
-
-/**
- * 数据对象
- */
 export interface DataObject {
   [key: string]: DataValue;
 }
-
-/**
- * 数据数组
- */
 export type DataArray = DataValue[];
 
-/**
- * A2UI 标准 Catalog ID
- */
-export const STANDARD_CATALOG_ID =
-  'https://a2ui.dev/specification/0.9/standard_catalog_definition.json';
+// ============================================================================
+// Client Capabilities (v0.9)
+// @see a2ui_client_capabilities.json
+// ============================================================================
 
 /**
- * A2UI 扩展 URI (v0.8)
+ * 函数定义
+ * @see a2ui_client_capabilities.json#/$defs/FunctionDefinition
  */
-export const A2UI_EXTENSION_URI_V08 = 'https://a2ui.org/a2a-extension/a2ui/v0.8';
+export interface FunctionDefinition {
+  /**
+   * 函数唯一名称
+   */
+  name: string;
+  /**
+   * 函数描述
+   */
+  description?: string;
+  /**
+   * 参数 JSON Schema
+   */
+  parameters: Record<string, unknown>;
+  /**
+   * 返回类型
+   */
+  returnType: 'string' | 'number' | 'boolean' | 'array' | 'object' | 'any' | 'void';
+}
 
 /**
- * A2UI 扩展 URI (v0.9)
+ * 组件和函数目录
+ * @see a2ui_client_capabilities.json#/$defs/Catalog
  */
-export const A2UI_EXTENSION_URI = 'https://a2ui.dev/specification/0.9';
+export interface Catalog {
+  /**
+   * 目录唯一标识符
+   */
+  catalogId: string;
+  /**
+   * 组件定义
+   */
+  components?: Record<string, Record<string, unknown>>;
+  /**
+   * 函数定义
+   */
+  functions?: FunctionDefinition[];
+  /**
+   * 主题定义
+   */
+  theme?: Record<string, Record<string, unknown>>;
+}
 
 /**
- * A2UI MIME 类型
+ * 客户端能力
+ * @see a2ui_client_capabilities.json
  */
-export const A2UI_MIME_TYPE = 'application/json+a2ui';
+export interface ClientCapabilities {
+  /**
+   * 客户端支持的目录 ID 列表
+   */
+  supportedCatalogIds: string[];
+  /**
+   * 内联目录定义（可选）
+   */
+  inlineCatalogs?: Catalog[];
+}
+
+// ============================================================================
+// Client Data Model (v0.9)
+// @see a2ui_client_data_model.json
+// ============================================================================
+
+/**
+ * 客户端数据模型（用于 sendDataModel 功能）
+ * @see a2ui_client_data_model.json
+ */
+export interface ClientDataModel {
+  /**
+   * Surface ID 到数据模型的映射
+   */
+  surfaces: Record<string, DataObject>;
+}
+
+// ============================================================================
+// Type Guards
+// ============================================================================
+
+export function isCreateSurfaceMessage(
+  message: ServerToClientMessage
+): message is CreateSurfaceMessage {
+  return 'createSurface' in message;
+}
+
+export function isUpdateComponentsMessage(
+  message: ServerToClientMessage
+): message is UpdateComponentsMessage {
+  return 'updateComponents' in message;
+}
+
+export function isUpdateDataModelMessage(
+  message: ServerToClientMessage
+): message is UpdateDataModelMessage {
+  return 'updateDataModel' in message;
+}
+
+export function isDeleteSurfaceMessage(
+  message: ServerToClientMessage
+): message is DeleteSurfaceMessage {
+  return 'deleteSurface' in message;
+}
+
+export function isActionMessage(
+  message: ClientToServerMessage
+): message is { action: ActionMessage } {
+  return 'action' in message;
+}
+
+export function isErrorMessage(message: ClientToServerMessage): message is { error: ClientError } {
+  return 'error' in message;
+}

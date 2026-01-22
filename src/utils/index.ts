@@ -1,17 +1,15 @@
 /**
  * A2UI Utilities
- *
- * 通用工具函数
  */
 
-import type { StringOrPath, NumberOrPath, BooleanOrPath } from '../types';
+import type { DynamicString, DynamicNumber, DynamicBoolean, DataBinding } from '../types';
 
 /**
- * 判断值是否为数据路径绑定
+ * 判断值是否为数据绑定
  */
-export function isPathBinding(
-  value: StringOrPath | NumberOrPath | BooleanOrPath
-): value is { path: string } {
+export function isDataBinding(
+  value: DynamicString | DynamicNumber | DynamicBoolean
+): value is DataBinding {
   return typeof value === 'object' && value !== null && 'path' in value;
 }
 
@@ -19,9 +17,9 @@ export function isPathBinding(
  * 从值中获取字面量（如果是绑定则返回 undefined）
  */
 export function getLiteralValue<T extends string | number | boolean>(
-  value: T | { path: string }
+  value: T | DataBinding
 ): T | undefined {
-  if (isPathBinding(value)) {
+  if (isDataBinding(value)) {
     return undefined;
   }
   return value as T;
@@ -31,18 +29,18 @@ export function getLiteralValue<T extends string | number | boolean>(
  * 从值中获取路径（如果是字面量则返回 undefined）
  */
 export function getPathValue(
-  value: StringOrPath | NumberOrPath | BooleanOrPath
+  value: DynamicString | DynamicNumber | DynamicBoolean
 ): string | undefined {
-  if (isPathBinding(value)) {
+  if (isDataBinding(value)) {
     return value.path;
   }
   return undefined;
 }
 
 /**
- * 创建数据路径绑定
+ * 创建数据绑定
  */
-export function path(dataPath: string): { path: string } {
+export function path(dataPath: string): DataBinding {
   return { path: dataPath };
 }
 

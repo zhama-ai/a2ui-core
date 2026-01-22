@@ -1,177 +1,123 @@
 /**
  * Component Builder
  *
- * 提供 A2UI 组件定义的构建工具函数
- * 用于创建符合 A2UI v0.9 协议的组件结构
+ * A2UI v0.9 组件构建器
  */
 
 import type {
   ComponentInstance,
   Action,
-  TextComponent,
+  ActionEvent,
+  TextVariant,
   ImageComponent,
-  RowComponent,
+  ImageVariant,
   ListComponent,
   DividerComponent,
-  TextFieldComponent,
-  ChoicePickerComponent,
-  ChildrenProperty,
-  StringOrPath,
-  NumberOrPath,
-  BooleanOrPath,
-  StringArrayOrPath,
+  TextFieldVariant,
+  ChoicePickerVariant,
+  ChildList,
+  DynamicString,
+  DynamicNumber,
+  DynamicBoolean,
+  DynamicStringList,
+  DynamicValue,
   ChartType,
   ChartSeries,
   ChartAxisConfig,
+  JustifyContent,
+  AlignItems,
+  ButtonVariant,
+  ChoiceOption,
+  AccessibilityAttributes,
+  CheckRule,
 } from '../types';
 
 import { generateId } from './id-generator';
 
 // ============================================================================
-// 类型定义
+// Options Types
 // ============================================================================
 
-/**
- * 组件构建选项基类
- */
 export interface ComponentOptions {
-  /** 组件 ID（可选，自动生成） */
   id?: string;
-  /** 在 Row/Column 中的权重 */
   weight?: number;
-  /** 额外的 CSS 类名（A2UI 工具类或自定义类） */
-  classes?: string[];
+  accessibility?: AccessibilityAttributes;
 }
 
-/**
- * Text 组件选项
- */
+export interface CheckableOptions {
+  checks?: CheckRule[];
+}
+
 export interface TextOptions extends ComponentOptions {
-  usageHint?: TextComponent['usageHint'];
+  variant?: TextVariant;
 }
 
-/**
- * Image 组件选项
- */
 export interface ImageOptions extends ComponentOptions {
   fit?: ImageComponent['fit'];
-  usageHint?: ImageComponent['usageHint'];
+  variant?: ImageVariant;
 }
 
-/**
- * Icon 组件选项
- */
 export type IconOptions = ComponentOptions;
-
-/**
- * Video 组件选项
- */
 export type VideoOptions = ComponentOptions;
 
-/**
- * AudioPlayer 组件选项
- */
 export interface AudioPlayerOptions extends ComponentOptions {
-  description?: StringOrPath;
+  description?: DynamicString;
 }
 
-/**
- * 布局组件选项
- */
 export interface LayoutOptions extends ComponentOptions {
-  alignment?: RowComponent['alignment'];
-  distribution?: RowComponent['distribution'];
+  align?: AlignItems;
+  justify?: JustifyContent;
 }
 
-/**
- * List 组件选项
- */
 export interface ListOptions extends ComponentOptions {
   direction?: ListComponent['direction'];
-  alignment?: ListComponent['alignment'];
+  align?: AlignItems;
 }
 
-/**
- * Card 组件选项
- */
 export type CardOptions = ComponentOptions;
 
-/**
- * Tabs 组件选项
- */
-export type TabsOptions = ComponentOptions;
-
-/**
- * Tab 项目
- */
-export interface TabItem {
-  title: string;
+export interface TabInput {
+  title: DynamicString;
   childId: string;
 }
 
-/**
- * Divider 组件选项
- */
+export type TabsOptions = ComponentOptions;
+
 export interface DividerOptions extends ComponentOptions {
   axis?: DividerComponent['axis'];
 }
 
-/**
- * Modal 组件选项
- */
 export type ModalOptions = ComponentOptions;
 
-/**
- * Button 组件选项
- */
-export interface ButtonOptions extends ComponentOptions {
-  primary?: boolean;
+export interface ButtonOptions extends ComponentOptions, CheckableOptions {
+  variant?: ButtonVariant;
 }
 
-/**
- * CheckBox 组件选项
- */
-export type CheckBoxOptions = ComponentOptions;
+export type CheckBoxOptions = ComponentOptions & CheckableOptions;
 
-/**
- * TextField 组件选项
- */
-export interface TextFieldOptions extends ComponentOptions {
-  usageHint?: TextFieldComponent['usageHint'];
-  validationRegexp?: string;
+export interface TextFieldOptions extends ComponentOptions, CheckableOptions {
+  variant?: TextFieldVariant;
 }
 
-/**
- * DateTimeInput 组件选项
- */
-export interface DateTimeInputOptions extends ComponentOptions {
+export interface DateTimeInputOptions extends ComponentOptions, CheckableOptions {
   enableDate?: boolean;
   enableTime?: boolean;
-  outputFormat?: string;
-  label?: StringOrPath;
+  min?: DynamicString;
+  max?: DynamicString;
+  label?: DynamicString;
 }
 
-/**
- * ChoicePicker 组件选项
- */
-export interface ChoicePickerOptions extends ComponentOptions {
-  label?: StringOrPath;
+export interface ChoicePickerOptions extends ComponentOptions, CheckableOptions {
+  label?: DynamicString;
+  variant?: ChoicePickerVariant;
 }
 
-/**
- * Slider 组件选项
- */
-export interface SliderOptions extends ComponentOptions {
-  label?: StringOrPath;
-  min?: number;
-  max?: number;
+export interface SliderOptions extends ComponentOptions, CheckableOptions {
+  label?: DynamicString;
 }
 
-/**
- * Chart 组件选项
- */
 export interface ChartOptions extends ComponentOptions {
-  title?: StringOrPath;
+  title?: DynamicString;
   xAxis?: ChartAxisConfig;
   yAxis?: ChartAxisConfig;
   legend?: boolean;
@@ -182,324 +128,240 @@ export interface ChartOptions extends ComponentOptions {
 }
 
 // ============================================================================
-// 内容组件
+// Action Helpers
 // ============================================================================
 
 /**
- * 创建 Text 组件
- *
- * @param text - 文本内容或数据路径
- * @param options - 组件选项
- *
- * @example
- * // 静态文本
- * text('Hello World', { usageHint: 'h1' });
- *
- * // 数据绑定
- * text({ path: '/user/name' });
+ * 创建服务器端事件 Action
  */
-export function text(content: StringOrPath, options: TextOptions = {}): ComponentInstance {
-  const { id = generateId('text'), weight, usageHint, classes } = options;
+export function eventAction(name: string, context?: Record<string, DynamicValue>): Action {
+  const event: ActionEvent = { name };
+  if (context) {
+    event.context = context;
+  }
+  return { event };
+}
+
+// ============================================================================
+// Content Components
+// ============================================================================
+
+export function text(content: DynamicString, options: TextOptions = {}): ComponentInstance {
+  const { id = generateId('text'), weight, variant, accessibility } = options;
   return {
     id,
     component: 'Text',
     text: content,
     ...(weight !== undefined && { weight }),
-    ...(usageHint && { usageHint }),
-    ...(classes && classes.length > 0 && { classes }),
+    ...(variant && { variant }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 Image 组件
- *
- * @param url - 图片 URL 或数据路径
- * @param options - 组件选项
- */
-export function image(url: StringOrPath, options: ImageOptions = {}): ComponentInstance {
-  const { id = generateId('image'), weight, fit, usageHint } = options;
+export function image(url: DynamicString, options: ImageOptions = {}): ComponentInstance {
+  const { id = generateId('image'), weight, fit, variant, accessibility } = options;
   return {
     id,
     component: 'Image',
     url,
     ...(weight !== undefined && { weight }),
     ...(fit && { fit }),
-    ...(usageHint && { usageHint }),
+    ...(variant && { variant }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 Icon 组件
- *
- * @param name - 图标名称或数据路径
- * @param options - 组件选项
- */
-export function icon(name: StringOrPath, options: IconOptions = {}): ComponentInstance {
-  const { id = generateId('icon'), weight } = options;
+export function icon(name: DynamicString, options: IconOptions = {}): ComponentInstance {
+  const { id = generateId('icon'), weight, accessibility } = options;
   return {
     id,
     component: 'Icon',
     name,
     ...(weight !== undefined && { weight }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 Video 组件
- *
- * @param url - 视频 URL 或数据路径
- * @param options - 组件选项
- */
-export function video(url: StringOrPath, options: VideoOptions = {}): ComponentInstance {
-  const { id = generateId('video'), weight } = options;
+export function video(url: DynamicString, options: VideoOptions = {}): ComponentInstance {
+  const { id = generateId('video'), weight, accessibility } = options;
   return {
     id,
     component: 'Video',
     url,
     ...(weight !== undefined && { weight }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 AudioPlayer 组件
- *
- * @param url - 音频 URL 或数据路径
- * @param options - 组件选项
- */
 export function audioPlayer(
-  url: StringOrPath,
+  url: DynamicString,
   options: AudioPlayerOptions = {}
 ): ComponentInstance {
-  const { id = generateId('audio'), weight, description } = options;
+  const { id = generateId('audio'), weight, description, accessibility } = options;
   return {
     id,
     component: 'AudioPlayer',
     url,
     ...(weight !== undefined && { weight }),
     ...(description && { description }),
+    ...(accessibility && { accessibility }),
   };
 }
 
 // ============================================================================
-// 布局组件
+// Layout Components
 // ============================================================================
 
-/**
- * 创建 Row 组件（水平布局）
- *
- * @param children - 子组件 ID 列表或动态模板
- * @param options - 布局选项
- *
- * @example
- * // 静态子组件
- * row(['text1', 'text2', 'button1']);
- *
- * // 动态模板
- * row({ componentId: 'itemTemplate', path: '/items' });
- */
-export function row(children: ChildrenProperty, options: LayoutOptions = {}): ComponentInstance {
-  const { id = generateId('row'), weight, alignment, distribution } = options;
+export function row(children: ChildList, options: LayoutOptions = {}): ComponentInstance {
+  const { id = generateId('row'), weight, align, justify, accessibility } = options;
   return {
     id,
     component: 'Row',
     children,
     ...(weight !== undefined && { weight }),
-    ...(alignment && { alignment }),
-    ...(distribution && { distribution }),
+    ...(align && { align }),
+    ...(justify && { justify }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 Column 组件（垂直布局）
- *
- * @param children - 子组件 ID 列表或动态模板
- * @param options - 布局选项
- */
-export function column(children: ChildrenProperty, options: LayoutOptions = {}): ComponentInstance {
-  const { id = generateId('column'), weight, alignment, distribution, classes } = options;
+export function column(children: ChildList, options: LayoutOptions = {}): ComponentInstance {
+  const { id = generateId('column'), weight, align, justify, accessibility } = options;
   return {
     id,
     component: 'Column',
     children,
     ...(weight !== undefined && { weight }),
-    ...(alignment && { alignment }),
-    ...(distribution && { distribution }),
-    ...(classes && classes.length > 0 && { classes }),
+    ...(align && { align }),
+    ...(justify && { justify }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 List 组件
- *
- * @param children - 子组件 ID 列表或动态模板
- * @param options - 列表选项
- */
-export function list(children: ChildrenProperty, options: ListOptions = {}): ComponentInstance {
-  const { id = generateId('list'), weight, direction, alignment } = options;
+export function list(children: ChildList, options: ListOptions = {}): ComponentInstance {
+  const { id = generateId('list'), weight, direction, align, accessibility } = options;
   return {
     id,
     component: 'List',
     children,
     ...(weight !== undefined && { weight }),
     ...(direction && { direction }),
-    ...(alignment && { alignment }),
+    ...(align && { align }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 Card 组件
- *
- * @param childId - 子组件 ID
- * @param options - 卡片选项
- */
 export function card(childId: string, options: CardOptions = {}): ComponentInstance {
-  const { id = generateId('card'), weight, classes } = options;
+  const { id = generateId('card'), weight, accessibility } = options;
   return {
     id,
     component: 'Card',
     child: childId,
     ...(weight !== undefined && { weight }),
-    ...(classes && classes.length > 0 && { classes }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 Tabs 组件
- *
- * @param items - 标签项列表
- * @param options - Tabs 选项
- */
-export function tabs(items: TabItem[], options: TabsOptions = {}): ComponentInstance {
-  const { id = generateId('tabs'), weight } = options;
+export function tabs(items: TabInput[], options: TabsOptions = {}): ComponentInstance {
+  const { id = generateId('tabs'), weight, accessibility } = options;
   return {
     id,
     component: 'Tabs',
-    tabItems: items.map((item) => ({
+    tabs: items.map((item) => ({
       title: item.title,
       child: item.childId,
     })),
     ...(weight !== undefined && { weight }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 Divider 组件
- *
- * @param options - 分割线选项
- */
 export function divider(options: DividerOptions = {}): ComponentInstance {
-  const { id = generateId('divider'), weight, axis } = options;
+  const { id = generateId('divider'), weight, axis, accessibility } = options;
   return {
     id,
     component: 'Divider',
     ...(weight !== undefined && { weight }),
     ...(axis && { axis }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 Modal 组件
- *
- * @param entryPointChildId - 触发模态框的组件 ID
- * @param contentChildId - 模态框内容组件 ID
- * @param options - Modal 选项
- */
 export function modal(
-  entryPointChildId: string,
-  contentChildId: string,
+  triggerId: string,
+  contentId: string,
   options: ModalOptions = {}
 ): ComponentInstance {
-  const { id = generateId('modal'), weight } = options;
+  const { id = generateId('modal'), weight, accessibility } = options;
   return {
     id,
     component: 'Modal',
-    entryPointChild: entryPointChildId,
-    contentChild: contentChildId,
+    trigger: triggerId,
+    content: contentId,
     ...(weight !== undefined && { weight }),
+    ...(accessibility && { accessibility }),
   };
 }
 
 // ============================================================================
-// 交互组件
+// Interactive Components
 // ============================================================================
 
-/**
- * 创建 Button 组件
- *
- * @param childId - 按钮内容组件 ID（通常是 Text）
- * @param action - 点击时触发的操作
- * @param options - 按钮选项
- */
 export function button(
   childId: string,
   action: Action,
   options: ButtonOptions = {}
 ): ComponentInstance {
-  const { id = generateId('button'), weight, primary } = options;
+  const { id = generateId('button'), weight, variant, checks, accessibility } = options;
   return {
     id,
     component: 'Button',
     child: childId,
     action,
     ...(weight !== undefined && { weight }),
-    ...(primary !== undefined && { primary }),
+    ...(variant && { variant }),
+    ...(checks && checks.length > 0 && { checks }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 CheckBox 组件
- *
- * @param label - 标签
- * @param value - 值（布尔值或数据路径）
- * @param options - 选项
- */
 export function checkbox(
-  label: StringOrPath,
-  value: BooleanOrPath,
+  label: DynamicString,
+  value: DynamicBoolean,
   options: CheckBoxOptions = {}
 ): ComponentInstance {
-  const { id = generateId('checkbox'), weight } = options;
+  const { id = generateId('checkbox'), weight, checks, accessibility } = options;
   return {
     id,
     component: 'CheckBox',
     label,
     value,
     ...(weight !== undefined && { weight }),
+    ...(checks && checks.length > 0 && { checks }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 TextField 组件
- *
- * @param label - 标签
- * @param textValue - 值（可选）
- * @param options - 选项
- */
 export function textField(
-  label: StringOrPath,
-  textValue?: StringOrPath,
+  label: DynamicString,
+  value?: DynamicString,
   options: TextFieldOptions = {}
 ): ComponentInstance {
-  const { id = generateId('textfield'), weight, usageHint, validationRegexp } = options;
+  const { id = generateId('textfield'), weight, variant, checks, accessibility } = options;
   return {
     id,
     component: 'TextField',
     label,
-    ...(textValue !== undefined && { text: textValue }),
+    ...(value !== undefined && { value }),
     ...(weight !== undefined && { weight }),
-    ...(usageHint && { usageHint }),
-    ...(validationRegexp && { validationRegexp }),
+    ...(variant && { variant }),
+    ...(checks && checks.length > 0 && { checks }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 DateTimeInput 组件
- *
- * @param value - 值（ISO 8601 格式字符串或数据路径）
- * @param options - 选项
- */
 export function dateTimeInput(
-  value: StringOrPath,
+  value: DynamicString,
   options: DateTimeInputOptions = {}
 ): ComponentInstance {
   const {
@@ -507,8 +369,11 @@ export function dateTimeInput(
     weight,
     enableDate,
     enableTime,
-    outputFormat,
+    min,
+    max,
     label,
+    checks,
+    accessibility,
   } = options;
   return {
     id,
@@ -517,82 +382,57 @@ export function dateTimeInput(
     ...(weight !== undefined && { weight }),
     ...(enableDate !== undefined && { enableDate }),
     ...(enableTime !== undefined && { enableTime }),
-    ...(outputFormat && { outputFormat }),
+    ...(min && { min }),
+    ...(max && { max }),
     ...(label && { label }),
+    ...(checks && checks.length > 0 && { checks }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 ChoicePicker 组件
- *
- * @param optionsList - 选项列表
- * @param value - 当前选中值
- * @param usageHint - 使用提示
- * @param options - 组件选项
- */
 export function choicePicker(
-  optionsList: Array<{ label: StringOrPath; value: string }>,
-  value: StringArrayOrPath,
-  usageHint: ChoicePickerComponent['usageHint'],
+  optionsList: ChoiceOption[],
+  value: DynamicStringList,
   options: ChoicePickerOptions = {}
 ): ComponentInstance {
-  const { id = generateId('choice'), weight, label } = options;
+  const { id = generateId('choice'), weight, label, variant, checks, accessibility } = options;
   return {
     id,
     component: 'ChoicePicker',
     options: optionsList,
     value,
-    usageHint,
     ...(weight !== undefined && { weight }),
     ...(label && { label }),
+    ...(variant && { variant }),
+    ...(checks && checks.length > 0 && { checks }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建 Slider 组件
- *
- * @param value - 当前值
- * @param options - 选项
- */
-export function slider(value: NumberOrPath, options: SliderOptions = {}): ComponentInstance {
-  const { id = generateId('slider'), weight, label, min, max } = options;
+export function slider(
+  value: DynamicNumber,
+  min: number,
+  max: number,
+  options: SliderOptions = {}
+): ComponentInstance {
+  const { id = generateId('slider'), weight, label, checks, accessibility } = options;
   return {
     id,
     component: 'Slider',
     value,
+    min,
+    max,
     ...(weight !== undefined && { weight }),
     ...(label && { label }),
-    ...(min !== undefined && { min }),
-    ...(max !== undefined && { max }),
+    ...(checks && checks.length > 0 && { checks }),
+    ...(accessibility && { accessibility }),
   };
 }
 
 // ============================================================================
-// 数据可视化组件
+// Extension Components
 // ============================================================================
 
-/**
- * 创建 Chart 组件
- *
- * @param chartType - 图表类型
- * @param series - 数据系列
- * @param options - 组件选项
- *
- * @example
- * // 简单折线图
- * chart('line', [
- *   { name: '销售额', data: [120, 200, 150, 80, 70, 110, 130] }
- * ], {
- *   title: '月度销售趋势',
- *   xAxis: { type: 'category', data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }
- * });
- *
- * // 数据绑定
- * chart('bar', { path: '/chart/series' }, {
- *   title: { path: '/chart/title' },
- *   xAxis: { type: 'category', data: { path: '/chart/categories' } }
- * });
- */
 export function chart(
   chartType: ChartType,
   series: ChartSeries[] | { path: string },
@@ -609,6 +449,7 @@ export function chart(
     height,
     width,
     echartsOption,
+    accessibility,
   } = options;
 
   return {
@@ -625,12 +466,10 @@ export function chart(
     ...(height !== undefined && { height }),
     ...(width !== undefined && { width }),
     ...(echartsOption && { echartsOption }),
+    ...(accessibility && { accessibility }),
   };
 }
 
-/**
- * 创建折线图组件（便捷函数）
- */
 export function lineChart(
   series: ChartSeries[] | { path: string },
   options: ChartOptions = {}
@@ -638,9 +477,6 @@ export function lineChart(
   return chart('line', series, options);
 }
 
-/**
- * 创建柱状图组件（便捷函数）
- */
 export function barChart(
   series: ChartSeries[] | { path: string },
   options: ChartOptions = {}
@@ -648,9 +484,6 @@ export function barChart(
   return chart('bar', series, options);
 }
 
-/**
- * 创建饼图组件（便捷函数）
- */
 export function pieChart(
   series: ChartSeries[] | { path: string },
   options: ChartOptions = {}
@@ -659,17 +492,9 @@ export function pieChart(
 }
 
 // ============================================================================
-// 便捷组件构建器
+// Convenience Builders
 // ============================================================================
 
-/**
- * 创建带文本的按钮（返回按钮和文本组件）
- *
- * @param buttonText - 按钮文本
- * @param action - 点击操作
- * @param options - 按钮选项
- * @returns 包含按钮和文本组件的数组
- */
 export function textButton(
   buttonText: string,
   action: Action,
@@ -681,54 +506,51 @@ export function textButton(
   return [textComp, buttonComp];
 }
 
-/**
- * 创建标题组件
- */
 export function h1(
-  content: StringOrPath,
-  options: Omit<TextOptions, 'usageHint'> = {}
+  content: DynamicString,
+  options: Omit<TextOptions, 'variant'> = {}
 ): ComponentInstance {
-  return text(content, { ...options, usageHint: 'h1' });
+  return text(content, { ...options, variant: 'h1' });
 }
 
 export function h2(
-  content: StringOrPath,
-  options: Omit<TextOptions, 'usageHint'> = {}
+  content: DynamicString,
+  options: Omit<TextOptions, 'variant'> = {}
 ): ComponentInstance {
-  return text(content, { ...options, usageHint: 'h2' });
+  return text(content, { ...options, variant: 'h2' });
 }
 
 export function h3(
-  content: StringOrPath,
-  options: Omit<TextOptions, 'usageHint'> = {}
+  content: DynamicString,
+  options: Omit<TextOptions, 'variant'> = {}
 ): ComponentInstance {
-  return text(content, { ...options, usageHint: 'h3' });
+  return text(content, { ...options, variant: 'h3' });
 }
 
 export function h4(
-  content: StringOrPath,
-  options: Omit<TextOptions, 'usageHint'> = {}
+  content: DynamicString,
+  options: Omit<TextOptions, 'variant'> = {}
 ): ComponentInstance {
-  return text(content, { ...options, usageHint: 'h4' });
+  return text(content, { ...options, variant: 'h4' });
 }
 
 export function h5(
-  content: StringOrPath,
-  options: Omit<TextOptions, 'usageHint'> = {}
+  content: DynamicString,
+  options: Omit<TextOptions, 'variant'> = {}
 ): ComponentInstance {
-  return text(content, { ...options, usageHint: 'h5' });
+  return text(content, { ...options, variant: 'h5' });
 }
 
 export function caption(
-  content: StringOrPath,
-  options: Omit<TextOptions, 'usageHint'> = {}
+  content: DynamicString,
+  options: Omit<TextOptions, 'variant'> = {}
 ): ComponentInstance {
-  return text(content, { ...options, usageHint: 'caption' });
+  return text(content, { ...options, variant: 'caption' });
 }
 
 export function body(
-  content: StringOrPath,
-  options: Omit<TextOptions, 'usageHint'> = {}
+  content: DynamicString,
+  options: Omit<TextOptions, 'variant'> = {}
 ): ComponentInstance {
-  return text(content, { ...options, usageHint: 'body' });
+  return text(content, { ...options, variant: 'body' });
 }

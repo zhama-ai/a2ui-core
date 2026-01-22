@@ -1,79 +1,120 @@
 /**
- * A2UI Types Module - v0.9
+ * A2UI Types - v0.9
  *
- * 导出所有 A2UI v0.9 协议相关的类型定义
+ * 严格按照 A2UI v0.9 官方规范导出类型
  */
 
+// ============================================================================
 // Primitives
+// ============================================================================
+
 export type {
-  StringOrPath,
-  NumberOrPath,
-  BooleanOrPath,
-  StringArrayOrPath,
+  DataBinding,
+  FunctionCall,
+  FunctionReturnType,
+  LogicExpression,
+  DynamicString,
+  DynamicNumber,
+  DynamicBoolean,
+  DynamicStringList,
+  DynamicValue,
+  CheckRule,
+  Checkable,
+  AccessibilityAttributes,
+  AccessibilityRole,
+  LiveRegion,
   ContextValue,
 } from './primitives';
 
+// ============================================================================
 // Components
+// ============================================================================
+
 export type {
   // Action
   Action,
+  ActionEvent,
   // Common
   ComponentCommon,
-  // Content components
+  CatalogComponentCommon,
+  // ChildList
+  ChildList,
+  // Content
   TextComponent,
+  TextVariant,
   ImageComponent,
+  ImageVariant,
   IconComponent,
+  CustomIconPath,
+  StandardIconName,
   VideoComponent,
   AudioPlayerComponent,
-  StandardIconName,
-  // Layout components
-  ChildrenProperty,
+  // Layout
   RowComponent,
   ColumnComponent,
   ListComponent,
   CardComponent,
   TabsComponent,
+  TabItem,
   DividerComponent,
   ModalComponent,
-  // Interactive components
+  JustifyContent,
+  AlignItems,
+  // Interactive
   ButtonComponent,
+  ButtonVariant,
   CheckBoxComponent,
   TextFieldComponent,
+  TextFieldVariant,
   DateTimeInputComponent,
   ChoicePickerComponent,
+  ChoicePickerVariant,
+  ChoiceOption,
   SliderComponent,
-  // Data visualization components
+  // Extension
   ChartComponent,
   ChartType,
   ChartSeries,
   ChartAxisConfig,
   // Union types
+  StandardComponent,
   AnyComponent,
   ComponentType,
   ComponentInstance,
 } from './components';
 
-// Messages (v0.9 only)
+// ============================================================================
+// Messages
+// ============================================================================
+
 export type {
-  // Theme
   Theme,
-  // Server to Client (v0.9)
   CreateSurfaceMessage,
   UpdateComponentsMessage,
   UpdateDataModelMessage,
   DeleteSurfaceMessage,
-  ServerToClientMessageV09,
-  // Client to Server
-  UserActionEvent,
-  DataChangeEvent,
-  ClientErrorMessage,
+  ServerToClientMessage,
+  ActionMessage,
+  ClientError,
   ValidationFailedError,
   GenericError,
   ClientToServerMessage,
-  // Data types
   DataValue,
   DataObject,
   DataArray,
+  // v0.9 Client types
+  FunctionDefinition,
+  Catalog,
+  ClientCapabilities,
+  ClientDataModel,
 } from './messages';
 
-export { isV09Message, STANDARD_CATALOG_ID, A2UI_EXTENSION_URI, A2UI_MIME_TYPE } from './messages';
+export {
+  STANDARD_CATALOG_ID,
+  isCreateSurfaceMessage,
+  isUpdateComponentsMessage,
+  isUpdateDataModelMessage,
+  isDeleteSurfaceMessage,
+  isActionMessage,
+  isErrorMessage,
+} from './messages';

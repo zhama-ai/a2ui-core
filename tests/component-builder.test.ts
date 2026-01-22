@@ -23,6 +23,7 @@ import {
   choicePicker,
   slider,
   textButton,
+  eventAction,
   h1,
   h2,
   h3,
@@ -57,9 +58,9 @@ describe('Component Builder', () => {
       });
     });
 
-    it('should include usageHint when specified', () => {
-      const comp = text('Title', { id: 'title', usageHint: 'h1' });
-      expect(comp.usageHint).toBe('h1');
+    it('should include variant when specified', () => {
+      const comp = text('Title', { id: 'title', variant: 'h1' });
+      expect(comp.variant).toBe('h1');
     });
 
     it('should auto-generate id if not provided', () => {
@@ -73,14 +74,14 @@ describe('Component Builder', () => {
       const comp = image('https://example.com/image.png', {
         id: 'my-image',
         fit: 'cover',
-        usageHint: 'avatar',
+        variant: 'avatar',
       });
       expect(comp).toEqual({
         id: 'my-image',
         component: 'Image',
         url: 'https://example.com/image.png',
         fit: 'cover',
-        usageHint: 'avatar',
+        variant: 'avatar',
       });
     });
   });
@@ -115,14 +116,14 @@ describe('Component Builder', () => {
       });
     });
 
-    it('should include layout options', () => {
+    it('should include layout options with new property names', () => {
       const comp = row(['child1'], {
         id: 'styled-row',
-        alignment: 'center',
-        distribution: 'spaceBetween',
+        align: 'center',
+        justify: 'spaceBetween',
       });
-      expect(comp.alignment).toBe('center');
-      expect(comp.distribution).toBe('spaceBetween');
+      expect(comp.align).toBe('center');
+      expect(comp.justify).toBe('spaceBetween');
     });
   });
 
@@ -134,6 +135,16 @@ describe('Component Builder', () => {
         component: 'Column',
         children: ['child1', 'child2', 'child3'],
       });
+    });
+
+    it('should include layout options', () => {
+      const comp = column(['child1'], {
+        id: 'styled-col',
+        align: 'stretch',
+        justify: 'start',
+      });
+      expect(comp.align).toBe('stretch');
+      expect(comp.justify).toBe('start');
     });
   });
 
@@ -150,76 +161,75 @@ describe('Component Builder', () => {
 
   describe('button', () => {
     it('should create button with action', () => {
-      const comp = button('btn-text', { name: 'submit' }, { id: 'my-button', primary: true });
+      const comp = button('btn-text', eventAction('submit'), { id: 'my-button', variant: 'primary' });
       expect(comp).toEqual({
         id: 'my-button',
         component: 'Button',
         child: 'btn-text',
-        action: { name: 'submit' },
-        primary: true,
+        action: { event: { name: 'submit' } },
+        variant: 'primary',
       });
     });
 
     it('should include action context', () => {
       const comp = button(
         'btn-text',
-        {
+        eventAction('select', {
+          itemId: { path: '/item/id' },
+          name: 'test',
+        }),
+        { id: 'ctx-button' }
+      );
+      expect(comp.action).toEqual({
+        event: {
           name: 'select',
           context: {
             itemId: { path: '/item/id' },
             name: 'test',
           },
         },
-        { id: 'ctx-button' }
-      );
-      expect(comp.action).toEqual({
-        name: 'select',
-        context: {
-          itemId: { path: '/item/id' },
-          name: 'test',
-        },
       });
     });
   });
 
   describe('textField', () => {
-    it('should create text field', () => {
+    it('should create text field with value', () => {
       const comp = textField('Email', { path: '/form/email' }, {
         id: 'email-field',
-        usageHint: 'shortText',
+        variant: 'shortText',
       });
       expect(comp).toEqual({
         id: 'email-field',
         component: 'TextField',
         label: 'Email',
-        text: { path: '/form/email' },
-        usageHint: 'shortText',
+        value: { path: '/form/email' },
+        variant: 'shortText',
       });
     });
   });
 
   describe('textButton', () => {
     it('should return text and button components', () => {
-      const [textComp, buttonComp] = textButton('Click Me', { name: 'click' });
+      const [textComp, buttonComp] = textButton('Click Me', eventAction('click'));
       
       expect(textComp.component).toBe('Text');
       expect(textComp.text).toBe('Click Me');
       
       expect(buttonComp.component).toBe('Button');
       expect(buttonComp.child).toBe(textComp.id);
-      expect(buttonComp.action).toEqual({ name: 'click' });
+      expect(buttonComp.action).toEqual({ event: { name: 'click' } });
     });
   });
 
   describe('heading helpers', () => {
-    it('should create h1', () => {
+    it('should create h1 with variant', () => {
       const comp = h1('Title', { id: 'title' });
-      expect(comp.usageHint).toBe('h1');
+      expect(comp.variant).toBe('h1');
     });
 
-    it('should create h2', () => {
+    it('should create h2 with variant', () => {
       const comp = h2('Subtitle', { id: 'subtitle' });
-      expect(comp.usageHint).toBe('h2');
+      expect(comp.variant).toBe('h2');
     });
   });
 
@@ -261,20 +271,20 @@ describe('Component Builder', () => {
       const comp = list(['item1', 'item2'], {
         id: 'my-list',
         direction: 'vertical',
-        alignment: 'start',
+        align: 'start',
       });
       expect(comp).toEqual({
         id: 'my-list',
         component: 'List',
         children: ['item1', 'item2'],
         direction: 'vertical',
-        alignment: 'start',
+        align: 'start',
       });
     });
   });
 
   describe('tabs', () => {
-    it('should create tabs component', () => {
+    it('should create tabs component with new property name', () => {
       const comp = tabs(
         [
           { title: 'Tab 1', childId: 'content1' },
@@ -285,7 +295,7 @@ describe('Component Builder', () => {
       expect(comp).toEqual({
         id: 'my-tabs',
         component: 'Tabs',
-        tabItems: [
+        tabs: [
           { title: 'Tab 1', child: 'content1' },
           { title: 'Tab 2', child: 'content2' },
         ],
@@ -305,13 +315,13 @@ describe('Component Builder', () => {
   });
 
   describe('modal', () => {
-    it('should create modal component', () => {
+    it('should create modal component with new property names', () => {
       const comp = modal('trigger-btn', 'modal-content', { id: 'my-modal' });
       expect(comp).toEqual({
         id: 'my-modal',
         component: 'Modal',
-        entryPointChild: 'trigger-btn',
-        contentChild: 'modal-content',
+        trigger: 'trigger-btn',
+        content: 'modal-content',
       });
     });
   });
@@ -360,8 +370,7 @@ describe('Component Builder', () => {
           { label: 'Option B', value: 'b' },
         ],
         ['a'],
-        'mutuallyExclusive',
-        { id: 'my-choice', label: 'Pick one' }
+        { id: 'my-choice', label: 'Pick one', variant: 'mutuallyExclusive' }
       );
       expect(comp).toEqual({
         id: 'my-choice',
@@ -371,18 +380,16 @@ describe('Component Builder', () => {
           { label: 'Option B', value: 'b' },
         ],
         value: ['a'],
-        usageHint: 'mutuallyExclusive',
         label: 'Pick one',
+        variant: 'mutuallyExclusive',
       });
     });
   });
 
   describe('slider', () => {
-    it('should create slider component', () => {
-      const comp = slider(50, {
+    it('should create slider component with required min/max', () => {
+      const comp = slider(50, 0, 100, {
         id: 'my-slider',
-        min: 0,
-        max: 100,
         label: 'Volume',
       });
       expect(comp).toEqual({
@@ -399,28 +406,27 @@ describe('Component Builder', () => {
   describe('more heading helpers', () => {
     it('should create h3', () => {
       const comp = h3('H3 Title', { id: 'h3' });
-      expect(comp.usageHint).toBe('h3');
+      expect(comp.variant).toBe('h3');
     });
 
     it('should create h4', () => {
       const comp = h4('H4 Title', { id: 'h4' });
-      expect(comp.usageHint).toBe('h4');
+      expect(comp.variant).toBe('h4');
     });
 
     it('should create h5', () => {
       const comp = h5('H5 Title', { id: 'h5' });
-      expect(comp.usageHint).toBe('h5');
+      expect(comp.variant).toBe('h5');
     });
 
     it('should create caption', () => {
       const comp = caption('Caption text', { id: 'cap' });
-      expect(comp.usageHint).toBe('caption');
+      expect(comp.variant).toBe('caption');
     });
 
     it('should create body', () => {
       const comp = body('Body text', { id: 'body' });
-      expect(comp.usageHint).toBe('body');
+      expect(comp.variant).toBe('body');
     });
   });
 });
-

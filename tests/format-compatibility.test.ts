@@ -4,7 +4,7 @@
  * 验证构建器输出与官方 A2UI v0.9 规范格式一致性
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   text,
   image,
@@ -29,6 +29,7 @@ import {
   updateDataModel,
   deleteSurface,
   resetIdCounter,
+  eventAction,
 } from '../src/builders/index';
 
 describe('v0.9 Format Compatibility', () => {
@@ -60,15 +61,15 @@ describe('v0.9 Format Compatibility', () => {
         column(['child1'], { id: 'column1' }),
         list(['child1'], { id: 'list1' }),
         card('child', { id: 'card1' }),
-        tabs([{ title: 'Tab1', child: 'child1' }], { id: 'tabs1' }),
+        tabs([{ title: 'Tab1', childId: 'child1' }], { id: 'tabs1' }),
         divider({ id: 'divider1' }),
         modal('entry', 'content', { id: 'modal1' }),
-        button('label', { name: 'action' }, { id: 'button1' }),
+        button('label', eventAction('action'), { id: 'button1' }),
         checkbox('Label', { path: '/checked' }, { id: 'checkbox1' }),
-        textField('Label', { id: 'textfield1' }),
+        textField('Label', undefined, { id: 'textfield1' }),
         dateTimeInput({ path: '/date' }, { id: 'datetime1' }),
         choicePicker([{ label: 'Option', value: 'opt' }], { path: '/selected' }, { id: 'choice1' }),
-        slider({ path: '/value' }, { id: 'slider1' }),
+        slider({ path: '/value' }, 0, 100, { id: 'slider1' }),
       ];
 
       const expectedTypes = [
@@ -111,7 +112,7 @@ describe('v0.9 Format Compatibility', () => {
     });
 
     it('should support number literal for slider', () => {
-      const comp = slider(50, { id: 'slider' });
+      const comp = slider(50, 0, 100, { id: 'slider' });
       expect(comp.value).toBe(50);
     });
 
@@ -123,18 +124,36 @@ describe('v0.9 Format Compatibility', () => {
 
   describe('Message Format', () => {
     it('should create valid createSurface message', () => {
-      const msg = createSurface('my-surface', 'https://a2ui.dev/specification/0.9/standard_catalog_definition.json');
+      const msg = createSurface('my-surface', {
+        catalogId: 'https://a2ui.dev/specification/v0_9/standard_catalog.json',
+      });
 
       expect(msg).toHaveProperty('createSurface');
       expect(msg.createSurface.surfaceId).toBe('my-surface');
-      expect(msg.createSurface.catalogId).toBe('https://a2ui.dev/specification/0.9/standard_catalog_definition.json');
+      expect(msg.createSurface.catalogId).toBe('https://a2ui.dev/specification/v0_9/standard_catalog.json');
+    });
+
+    it('should create createSurface message with theme', () => {
+      const msg = createSurface('my-surface', {
+        theme: { primaryColor: '#00BFFF' },
+      });
+
+      expect(msg.createSurface.theme).toEqual({ primaryColor: '#00BFFF' });
+    });
+
+    it('should create createSurface message with sendDataModel', () => {
+      const msg = createSurface('my-surface', {
+        sendDataModel: true,
+      });
+
+      expect(msg.createSurface.sendDataModel).toBe(true);
     });
 
     it('should create valid updateComponents message', () => {
       const components = [
         column(['title', 'button'], { id: 'root' }),
         text('Hello', { id: 'title' }),
-        button('Click me', { name: 'submit' }, { id: 'button' }),
+        button('btn-text', eventAction('submit'), { id: 'button' }),
       ];
 
       const msg = updateComponents('my-surface', components);
@@ -145,7 +164,7 @@ describe('v0.9 Format Compatibility', () => {
       expect(msg.updateComponents.components[0].id).toBe('root');
     });
 
-    it('should create valid updateDataModel message with replace op', () => {
+    it('should create valid updateDataModel message', () => {
       const msg = updateDataModel('my-surface', { user: { name: 'John' } });
 
       expect(msg).toHaveProperty('updateDataModel');
@@ -153,11 +172,10 @@ describe('v0.9 Format Compatibility', () => {
       expect(msg.updateDataModel.value).toEqual({ user: { name: 'John' } });
     });
 
-    it('should create valid updateDataModel message with path and op', () => {
-      const msg = updateDataModel('my-surface', 'Jane', '/user/name', 'replace');
+    it('should create valid updateDataModel message with path', () => {
+      const msg = updateDataModel('my-surface', 'Jane', '/user/name');
 
       expect(msg.updateDataModel.path).toBe('/user/name');
-      expect(msg.updateDataModel.op).toBe('replace');
       expect(msg.updateDataModel.value).toBe('Jane');
     });
 
@@ -182,30 +200,72 @@ describe('v0.9 Format Compatibility', () => {
   });
 
   describe('Action Format', () => {
-    it('should create action with name only', () => {
-      const comp = button('Submit', { name: 'submitForm' }, { id: 'btn' });
-      expect(comp.action).toEqual({ name: 'submitForm' });
+    it('should create action with event wrapper', () => {
+      const comp = button('Submit', eventAction('submitForm'), { id: 'btn' });
+      expect(comp.action).toEqual({ event: { name: 'submitForm' } });
     });
 
     it('should create action with context', () => {
       const comp = button(
         'Submit',
-        {
+        eventAction('submitForm', {
+          userId: '123',
+          email: { path: '/form/email' },
+        }),
+        { id: 'btn' }
+      );
+
+      expect(comp.action).toEqual({
+        event: {
           name: 'submitForm',
           context: {
             userId: '123',
             email: { path: '/form/email' },
           },
         },
-        { id: 'btn' }
-      );
-
-      expect(comp.action.name).toBe('submitForm');
-      expect(comp.action.context).toEqual({
-        userId: '123',
-        email: { path: '/form/email' },
       });
     });
   });
-});
 
+  describe('v0.9 Property Names', () => {
+    it('should use variant instead of usageHint for Text', () => {
+      const comp = text('Hello', { id: 'test', variant: 'h1' });
+      expect(comp.variant).toBe('h1');
+      expect(comp).not.toHaveProperty('usageHint');
+    });
+
+    it('should use variant instead of usageHint for Image', () => {
+      const comp = image('http://example.com/img.png', { id: 'test', variant: 'avatar' });
+      expect(comp.variant).toBe('avatar');
+      expect(comp).not.toHaveProperty('usageHint');
+    });
+
+    it('should use align and justify instead of alignment and distribution', () => {
+      const comp = row(['child1'], { id: 'test', align: 'center', justify: 'spaceBetween' });
+      expect(comp.align).toBe('center');
+      expect(comp.justify).toBe('spaceBetween');
+      expect(comp).not.toHaveProperty('alignment');
+      expect(comp).not.toHaveProperty('distribution');
+    });
+
+    it('should use tabs instead of tabItems', () => {
+      const comp = tabs([{ title: 'Tab 1', childId: 'content1' }], { id: 'test' });
+      expect(comp.tabs).toBeDefined();
+      expect(comp).not.toHaveProperty('tabItems');
+    });
+
+    it('should use trigger and content instead of entryPointChild and contentChild', () => {
+      const comp = modal('trigger', 'content', { id: 'test' });
+      expect(comp.trigger).toBe('trigger');
+      expect(comp.content).toBe('content');
+      expect(comp).not.toHaveProperty('entryPointChild');
+      expect(comp).not.toHaveProperty('contentChild');
+    });
+
+    it('should use value instead of text for TextField', () => {
+      const comp = textField('Label', 'initial value', { id: 'test' });
+      expect(comp.value).toBe('initial value');
+      expect(comp).not.toHaveProperty('text');
+    });
+  });
+});

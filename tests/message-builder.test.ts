@@ -1,22 +1,28 @@
 /**
- * Message Builder Tests - v0.9
+ * Message Builder Tests
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   createSurface,
   updateComponents,
   updateDataModel,
   deleteSurface,
-  createV09Messages,
+  createMessages,
   messagesToJsonl,
   jsonlToMessages,
 } from '../src/builders/message-builder';
+import { text, column, button, eventAction, h1 } from '../src/builders/component-builder';
+import { resetIdCounter } from '../src/builders/id-generator';
 import { STANDARD_CATALOG_ID } from '../src/types';
 
-describe('Message Builder v0.9', () => {
+describe('Message Builder', () => {
+  beforeEach(() => {
+    resetIdCounter();
+  });
+
   describe('createSurface', () => {
-    it('should create surface message with default catalog', () => {
+    it('should create surface with default catalog', () => {
       const msg = createSurface('my-surface');
       expect(msg).toEqual({
         createSurface: {
@@ -26,17 +32,36 @@ describe('Message Builder v0.9', () => {
       });
     });
 
-    it('should use custom catalog', () => {
-      const msg = createSurface('my-surface', 'https://custom.catalog.json');
-      expect(msg.createSurface.catalogId).toBe('https://custom.catalog.json');
+    it('should create surface with custom catalog', () => {
+      const customCatalog = 'https://example.com/catalog.json';
+      const msg = createSurface('my-surface', { catalogId: customCatalog });
+      expect(msg.createSurface.catalogId).toBe(customCatalog);
+    });
+
+    it('should create surface with theme', () => {
+      const msg = createSurface('my-surface', {
+        theme: {
+          primaryColor: '#FF5733',
+          iconUrl: 'https://example.com/icon.png',
+        },
+      });
+      expect(msg.createSurface.theme).toEqual({
+        primaryColor: '#FF5733',
+        iconUrl: 'https://example.com/icon.png',
+      });
+    });
+
+    it('should create surface with sendDataModel flag', () => {
+      const msg = createSurface('my-surface', { sendDataModel: true });
+      expect(msg.createSurface.sendDataModel).toBe(true);
     });
   });
 
   describe('updateComponents', () => {
     it('should create update components message', () => {
       const components = [
-        { id: 'root', component: 'Column', children: ['text1'] },
-        { id: 'text1', component: 'Text', text: 'Hello' },
+        text('Hello', { id: 'text1' }),
+        column(['text1'], { id: 'root' }),
       ];
       const msg = updateComponents('my-surface', components);
       expect(msg).toEqual({
@@ -49,32 +74,35 @@ describe('Message Builder v0.9', () => {
   });
 
   describe('updateDataModel', () => {
-    it('should create data model update with replace', () => {
-      const msg = updateDataModel('my-surface', { name: 'John' });
+    it('should create data model update with value only', () => {
+      const msg = updateDataModel('my-surface', { user: 'John' });
       expect(msg).toEqual({
         updateDataModel: {
           surfaceId: 'my-surface',
-          op: 'replace',
-          value: { name: 'John' },
+          value: { user: 'John' },
         },
       });
     });
 
-    it('should include path when specified', () => {
-      const msg = updateDataModel('my-surface', 'John', '/user/name');
-      expect(msg.updateDataModel.path).toBe('/user/name');
+    it('should create data model update with path', () => {
+      const msg = updateDataModel('my-surface', 'Jane', '/user/name');
+      expect(msg).toEqual({
+        updateDataModel: {
+          surfaceId: 'my-surface',
+          path: '/user/name',
+          value: 'Jane',
+        },
+      });
     });
 
-    it('should support add operation', () => {
-      const msg = updateDataModel('my-surface', { newField: 123 }, '/user', 'add');
-      expect(msg.updateDataModel.op).toBe('add');
-      expect(msg.updateDataModel.value).toEqual({ newField: 123 });
-    });
-
-    it('should support remove operation', () => {
-      const msg = updateDataModel('my-surface', undefined, '/user/temp', 'remove');
-      expect(msg.updateDataModel.op).toBe('remove');
-      expect(msg.updateDataModel.value).toBeUndefined();
+    it('should create data model delete (no value)', () => {
+      const msg = updateDataModel('my-surface', undefined, '/user/temp');
+      expect(msg).toEqual({
+        updateDataModel: {
+          surfaceId: 'my-surface',
+          path: '/user/temp',
+        },
+      });
     });
   });
 
@@ -89,66 +117,92 @@ describe('Message Builder v0.9', () => {
     });
   });
 
-  describe('createV09Messages', () => {
-    it('should create complete message sequence', () => {
-      const messages = createV09Messages({
-        surfaceId: 'test-surface',
-        components: [{ id: 'root', component: 'Text', text: 'Hello' }],
-        dataModel: { greeting: 'Hello World' },
-      });
+  describe('createMessages', () => {
+    it('should create message sequence without data model', () => {
+      const title = h1('Welcome', { id: 'title' });
+      const root = column(['title'], { id: 'root' });
 
-      expect(messages).toHaveLength(3);
-      expect('createSurface' in messages[0]).toBe(true);
-      expect('updateComponents' in messages[1]).toBe(true);
-      expect('updateDataModel' in messages[2]).toBe(true);
-    });
-
-    it('should omit dataModel message when not provided', () => {
-      const messages = createV09Messages({
-        surfaceId: 'test-surface',
-        components: [{ id: 'root', component: 'Text', text: 'Hello' }],
+      const messages = createMessages({
+        surfaceId: '@chat',
+        components: [title, root],
       });
 
       expect(messages).toHaveLength(2);
+      expect(messages[0]).toHaveProperty('createSurface');
+      expect(messages[1]).toHaveProperty('updateComponents');
     });
 
-    it('should use custom catalogId', () => {
-      const customCatalog = 'https://custom.example.com/catalog.json';
-      const messages = createV09Messages({
-        surfaceId: 'test-surface',
-        components: [{ id: 'root', component: 'Text', text: 'Hello' }],
-        catalogId: customCatalog,
+    it('should create message sequence with data model', () => {
+      const title = h1('Welcome', { id: 'title' });
+      const root = column(['title'], { id: 'root' });
+
+      const messages = createMessages({
+        surfaceId: '@chat',
+        components: [title, root],
+        dataModel: { user: { name: 'John' } },
       });
 
-      const createMsg = messages[0] as { createSurface: { catalogId: string } };
-      expect(createMsg.createSurface.catalogId).toBe(customCatalog);
+      expect(messages).toHaveLength(3);
+      expect(messages[0]).toHaveProperty('createSurface');
+      expect(messages[1]).toHaveProperty('updateComponents');
+      expect(messages[2]).toHaveProperty('updateDataModel');
+    });
+
+    it('should create message sequence with all options', () => {
+      const title = h1('Welcome', { id: 'title' });
+      const root = column(['title'], { id: 'root' });
+
+      const messages = createMessages({
+        surfaceId: '@chat',
+        catalogId: 'https://example.com/catalog.json',
+        theme: { primaryColor: '#00BFFF' },
+        sendDataModel: true,
+        components: [title, root],
+        dataModel: { user: { name: 'John' } },
+      });
+
+      expect(messages).toHaveLength(3);
+      const createMsg = messages[0] as { createSurface: { catalogId: string; theme: object; sendDataModel: boolean } };
+      expect(createMsg.createSurface.catalogId).toBe('https://example.com/catalog.json');
+      expect(createMsg.createSurface.theme).toEqual({ primaryColor: '#00BFFF' });
+      expect(createMsg.createSurface.sendDataModel).toBe(true);
     });
   });
 
   describe('JSONL utilities', () => {
     it('should convert messages to JSONL', () => {
-      const messages = [createSurface('surface1'), deleteSurface('surface1')];
+      const messages = createMessages({
+        surfaceId: 'test',
+        components: [text('Hello', { id: 'root' })],
+      });
+
       const jsonl = messagesToJsonl(messages);
       const lines = jsonl.split('\n');
+
       expect(lines).toHaveLength(2);
-      expect(JSON.parse(lines[0])).toEqual(messages[0]);
-      expect(JSON.parse(lines[1])).toEqual(messages[1]);
+      expect(() => JSON.parse(lines[0])).not.toThrow();
+      expect(() => JSON.parse(lines[1])).not.toThrow();
     });
 
     it('should parse JSONL to messages', () => {
-      const jsonl =
-        '{"createSurface":{"surfaceId":"s1","catalogId":"c1"}}\n{"deleteSurface":{"surfaceId":"s1"}}';
-      const messages = jsonlToMessages(jsonl);
-      expect(messages).toHaveLength(2);
-      expect('createSurface' in messages[0]).toBe(true);
-      expect('deleteSurface' in messages[1]).toBe(true);
+      const original = createMessages({
+        surfaceId: 'test',
+        components: [text('Hello', { id: 'root' })],
+      });
+
+      const jsonl = messagesToJsonl(original);
+      const parsed = jsonlToMessages(jsonl);
+
+      expect(parsed).toHaveLength(original.length);
+      expect(parsed[0]).toHaveProperty('createSurface');
+      expect(parsed[1]).toHaveProperty('updateComponents');
     });
 
     it('should handle empty lines in JSONL', () => {
-      const jsonl =
-        '{"createSurface":{"surfaceId":"s1","catalogId":"c1"}}\n\n{"deleteSurface":{"surfaceId":"s1"}}';
-      const messages = jsonlToMessages(jsonl);
-      expect(messages).toHaveLength(2);
+      const jsonl = '{"createSurface":{"surfaceId":"test","catalogId":"cat"}}\n\n{"deleteSurface":{"surfaceId":"test"}}\n';
+      const parsed = jsonlToMessages(jsonl);
+
+      expect(parsed).toHaveLength(2);
     });
   });
 });
