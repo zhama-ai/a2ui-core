@@ -595,6 +595,7 @@ export interface ChartComponent extends ComponentCommon, CatalogComponentCommon 
   title?: DynamicString;
   xAxis?: ChartAxisConfig;
   yAxis?: ChartAxisConfig;
+  indicator?: ChartRadarIndicator[] | DataBinding;
   legend?: boolean;
   tooltip?: boolean;
   height?: number;
@@ -608,6 +609,14 @@ export interface ChartSeries {
   name?: string;
   data: (number | [number, number] | Record<string, unknown>)[] | DataBinding;
   type?: string;
+  color?: string;
+  [key: string]: unknown;
+}
+
+export interface ChartRadarIndicator {
+  name: string;
+  max?: number;
+  min?: number;
   color?: string;
   [key: string]: unknown;
 }
