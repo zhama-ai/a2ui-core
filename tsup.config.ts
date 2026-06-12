@@ -1,8 +1,5 @@
 import { defineConfig } from 'tsup';
 
-const isDevelopment = process.env.NODE_ENV === 'development';
-const isProduction = !isDevelopment;
-
 export default defineConfig({
   // 多入口点
   entry: {
@@ -29,7 +26,7 @@ export default defineConfig({
   splitting: false,
 
   // 源码映射策略
-  sourcemap: !isProduction || process.env.ENABLE_SOURCEMAP === 'true',
+  sourcemap: process.env.ENABLE_SOURCEMAP === 'true',
 
   // 压缩策略：始终启用压缩（发布库需要）
   minify: true,
